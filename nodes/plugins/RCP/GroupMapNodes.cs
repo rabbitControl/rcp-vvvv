@@ -120,8 +120,11 @@ namespace VVVV.Nodes
 	public class GroupMapNode : IPluginEvaluate
 	{
 		#region fields & pins
-		[Output("Output")]
-		public ISpread<string> FOutput;
+		[Output("Patch Path")]
+		public ISpread<string> FPath;
+		
+		[Output("Group Name")]
+		public ISpread<string> FGroup;
 
 		[Import()]
 		public IPluginHost FPluginHost;
@@ -131,12 +134,14 @@ namespace VVVV.Nodes
 		public void Evaluate(int SpreadMax)
 		{
 			var map = GroupMap.GetEntries();
-			FOutput.SliceCount = map.Count();
+			FPath.SliceCount = map.Count();
+			FGroup.SliceCount = map.Count();
 
 			int i = 0;
 			foreach (var entry in map)
 			{
-				FOutput[i] = entry.Item1 + " " + entry.Item2;
+				FPath[i] = entry.Item1;
+				FGroup[i] = entry.Item2;
 				i++;
 			}	
 		}

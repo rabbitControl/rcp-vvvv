@@ -60,7 +60,7 @@ namespace VVVV.Nodes
 		[Input("Input")]
 		public ISpread<Parameter> FParameters;
 		
-		[Input("Parent")]
+		[Input("Group")]
 		public ISpread<string> FParent;
 		
 		[Output("Output")]
@@ -107,8 +107,8 @@ namespace VVVV.Nodes
 //		[Output("Order")]
 //		public ISpread<int> FOrder;
 		
-		[Output("Parent")]
-		public ISpread<string> FParent;
+//		[Output("Parent")]
+//		public ISpread<string> FParent;
 		
 //		[Output("Widget")]
 //		public ISpread<string> FWidget;
@@ -128,7 +128,7 @@ namespace VVVV.Nodes
 			FTypeDefinition.AssignFrom(FParameter.Select(p => p.TypeDefinition));
 			FValue.AssignFrom(FParameter.Select(p => p.Value));
 			FLabel.AssignFrom(FParameter.Select(p => p.Label));
-			FParent.AssignFrom(FParameter.Select(p => p.Parent?.ToIdString() ?? ""));
+//			FParent.AssignFrom(FParameter.Select(p => p.Parent?.ToIdString() ?? ""));
 			FUserdata.AssignFrom(FParameter.Select(p => p.Userdata));
 		}
 	}
@@ -160,8 +160,8 @@ namespace VVVV.Nodes
 //		[Output("Order")]
 //		public ISpread<int> FOrder;
 		
-		[Input("Parent")]
-		public ISpread<string> FParent;
+//		[Input("Parent")]
+//		public ISpread<string> FParent;
 		
 //		[Output("Widget")]
 //		public ISpread<string> FWidget;
@@ -185,7 +185,7 @@ namespace VVVV.Nodes
 			FParams.Clear();
 			for (int i=0; i<SpreadMax; i++)
 			{
-				var param = new Parameter(FId[i].ToRCPId(), FDatatype[i], FTypeDefinition[i], FValue[i], FLabel[i], FParent[i].ToRCPId(), FUserdata[i]);
+				var param = new Parameter(FId[i].ToRCPId(), FDatatype[i], FTypeDefinition[i], FValue[i], FLabel[i], new byte[0]{}/*FParent[i].ToRCPId()*/, FUserdata[i]);
 				FParams.Add(param);
 			}	
 			

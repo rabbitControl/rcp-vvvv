@@ -91,14 +91,17 @@ namespace VVVV.Nodes
 		
 		private void GroupChanged(string parentId)
 		{
-			var parameters = FParameters[parentId];
-			//FLogger.Log(LogType.Debug, "ps: " + parameters.Count());
-			
-			var newParent = GroupMap.GetName(parentId).ToRCPId();
-			foreach (var param in parameters)
+			List<IParameter> parameters;
+			if (FParameters.TryGetValue(parentId, out parameters))
 			{
-				param.Parent = newParent;
-				FRCPServer.UpdateParameter(param);
+				//FLogger.Log(LogType.Debug, "ps: " + parentId);
+				
+				var newParent = GroupMap.GetName(parentId).ToRCPId();
+				foreach (var param in parameters)
+				{
+					param.Parent = newParent;
+					FRCPServer.UpdateParameter(param);
+				}
 			}
 		}
 		
