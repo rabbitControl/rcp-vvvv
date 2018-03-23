@@ -44,9 +44,6 @@
       <HintPath>dependencies\RCPSharp.dll</HintPath>
     </Reference>
     <Reference Include="SlimDX" />
-    <Reference Include="SuperSocket.ClientEngine">
-      <HintPath>dependencies\SuperSocket.ClientEngine.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition.Codeplex" />
     <Reference Include="System.Core" />
@@ -58,13 +55,13 @@
     <Reference Include="VVVV.PluginInterfaces" />
     <Reference Include="VVVV.Utils" />
     <Reference Include="VVVV.Utils3rdParty" />
-    <Reference Include="WebSocket4Net">
-      <HintPath>dependencies\WebSocket4Net.dll</HintPath>
+    <Reference Include="WebSocketSharp">
+      <HintPath>dependencies\websocket-sharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ParameterNodes.cs" />
     <Compile Include="GroupMapNodes.cs" />
+    <Compile Include="ParameterNodes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RCPClientNode.cs" />
     <Compile Include="RCPServerNode.cs" />
