@@ -1,4 +1,4 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50debug35.18.dtd" >
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50beta36.dtd" >
    <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="0" scrolly="-360">
    <BOUNDS type="Window" left="10380" top="2445" width="9540" height="9900">
    </BOUNDS>
@@ -453,10 +453,10 @@
    </PIN>
    <PIN pinname="Output" visible="1">
    </PIN>
+   <PIN pinname="Group" slicecount="1" visible="1" values="||">
+   </PIN>
    </NODE>
    <LINK srcnodeid="29" srcpinname="Parameters" dstnodeid="34" dstpinname="Input">
-   </LINK>
-   <LINK srcnodeid="34" srcpinname="Output" dstnodeid="28" dstpinname="Input">
    </LINK>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="35">
    <BOUNDS type="Node" left="3330" top="3330" width="2505" height="270">
@@ -504,4 +504,8 @@
    </NODE>
    <LINK srcnodeid="28" srcpinname="Userdata" dstnodeid="37" dstpinname="Input String">
    </LINK>
+   <LINK srcnodeid="34" srcpinname="Output" dstnodeid="28" dstpinname="Input">
+   </LINK>
+   <PACK Name="dx11" Version="1.2">
+   </PACK>
    </PATCH>

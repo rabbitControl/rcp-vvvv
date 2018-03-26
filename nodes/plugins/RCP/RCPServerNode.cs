@@ -403,14 +403,9 @@ namespace VVVV.Nodes
 	            {
 		            /// enums: guiType, enumName, default
 	                var enumName = subtype[1].Trim();
-	                var entryCount = EnumManager.GetEnumEntryCount(enumName);
-	                var entries = new List<string>();
-	                for (int i = 0; i < entryCount; i++)
-	                    entries.Add(EnumManager.GetEnumEntryString(enumName, i));
-	
-	                var def = new EnumDefinition();
-	                def.Default = (ushort) entries.IndexOf(subtype[2].Trim());
-	            	def.Entries = entries.ToArray();
+	            	var deflt = subtype[2].Trim();
+	            	var def = GetEnumDefinition(enumName, deflt);
+	            	var entries = def.Entries.ToList();
 	            	
 	            	if (sliceCount > 1)
 					{
@@ -457,6 +452,20 @@ namespace VVVV.Nodes
                 parameter.Userdata = Encoding.UTF8.GetBytes(tag.Spread.Trim('|'));
 			
 			return parameter;
+		}
+		
+		private EnumDefinition GetEnumDefinition(string enumName, string deflt)
+		{
+			var entryCount = EnumManager.GetEnumEntryCount(enumName);
+            var entries = new List<string>();
+            for (int i = 0; i < entryCount; i++)
+                entries.Add(EnumManager.GetEnumEntryString(enumName, i));
+
+            var def = new EnumDefinition();
+            def.Default = (ushort) entries.IndexOf(deflt);
+        	def.Entries = entries.ToArray();
+			
+			return def;
 		}
 		
 		private void AddParamToPatch(string address, IParameter param)
@@ -549,7 +558,22 @@ namespace VVVV.Nodes
 			var id = IdFromPin(pin);
 			
 			var param = FRCPServer.GetParameter(id.ToRCPId());
+			//in case of enum pin we also update the full definition here
+			//which may have changed in the meantime
+			//TODO: subscribe to enum-changes on the host and update all related
+			//parameters as changes happen, so a client can update its gui accordingly
+			if (pin.Type == "Enumeration")
+			{
+				var subtype = pin.SubType.Split(',').Select(s => s.Trim()).ToArray();
+				var enumName = subtype[1].Trim();
+				var dflt = subtype[2].Trim();
+				var newDef = GetEnumDefinition(enumName, dflt);
+				var paramDef = param.TypeDefinition as EnumDefinition;
+				paramDef.Default = newDef.Default;
+				paramDef.Entries = newDef.Entries;
+			}
 			param = RCP.Helpers.StringToValue(param, pin.Spread);
+			
 			FRCPServer.UpdateParameter(param);
 			
 			//FLogger.Log(LogType.Debug, pin.Spread);
@@ -644,6 +668,7 @@ namespace RCP
 			}
 		}
 		
+		//sets the value given as string on the given parameter
 		public static IParameter StringToValue(dynamic param, string input)
 		{
 			try
