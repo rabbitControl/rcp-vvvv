@@ -78,6 +78,7 @@ namespace VVVV.Nodes
 			//FRCPClient.SetTransporter(FWebsocketTransporter);
 			
 			//FRCPClient.Log = (s) => FLogger.Log(LogType.Debug, "client: " + s);
+			FClientOut[0] = FRCPClient;
 		}
 		
 		public void Dispose()
@@ -96,7 +97,7 @@ namespace VVVV.Nodes
 		{
 			FParamIds.Remove(parameter.Id);
 			FParamIds.Add(parameter.Id);
-			UpdateOutputs();
+			UpdateOutput(parameter.Id);
 		}
 		
 		private void ParameterRemoved(byte[] id)
@@ -128,9 +129,6 @@ namespace VVVV.Nodes
 			}
 			
 			FIsConnected[0] = FTransporter.IsConnected;
-						
-			UpdateOutputs();
-			FClientOut[0] = FRCPClient;
 		}
 		
 		private void Initialize()
@@ -156,8 +154,24 @@ namespace VVVV.Nodes
 				var param = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, userdata);
 				ps.Add(param);
 			}
-			
 			FParameters.AssignFrom(ps);
+		}
+		
+		private void UpdateOutput(byte[] id)
+		{
+			var p = FRCPClient.GetParameter(id);
+
+			string v = "null";
+			dynamic dp = p;
+			if (dp.Value != null)
+				v = RCP.Helpers.ValueToString(dp);
+			
+			var datatype = p.TypeDefinition.Datatype.ToString();
+			var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
+			var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
+			
+			var orderedParams = FParamIds.Select(pid => FRCPClient.GetParameter(pid)).OrderBy(param => param.Order).ToList();
+			FParameters[orderedParams.IndexOf(p)] = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, userdata);
 		}
 	}
 	
