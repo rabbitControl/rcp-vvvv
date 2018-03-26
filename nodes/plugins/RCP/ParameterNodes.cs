@@ -61,7 +61,7 @@ namespace VVVV.Nodes
 		public ISpread<Parameter> FParameters;
 		
 		[Input("Group")]
-		public ISpread<string> FParent;
+		public ISpread<string> FGroup;
 		
 		[Output("Output")]
 		public ISpread<Parameter> FParametersOut;
@@ -70,10 +70,13 @@ namespace VVVV.Nodes
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			if (string.IsNullOrWhiteSpace(FParent[0]))
+			if (string.IsNullOrWhiteSpace(FGroup[0]))
 				FParametersOut.AssignFrom(FParameters);
 			else
-				FParametersOut.AssignFrom(FParameters.Where(p => p.Parent.ToIdString() == FParent[0]));
+			{
+				var groups = FGroup.ToList();
+				FParametersOut.AssignFrom(FParameters.Where(p => groups.Contains(p.Parent.ToIdString())));
+			}
 		}
 	}
 	
