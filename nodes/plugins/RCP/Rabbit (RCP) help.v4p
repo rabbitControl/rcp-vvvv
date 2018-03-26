@@ -205,7 +205,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="1335" top="1965" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10000">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10001">
    </PIN>
    <PIN pinname="Units" slicecount="1" values="||">
    </PIN>
@@ -257,6 +257,8 @@
    </BOUNDS>
    <BOUNDS type="Box" left="5280" top="3990" width="3000" height="3000">
    </BOUNDS>
+   <PIN pinname="Remote Port" slicecount="1" values="10001">
+   </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="24">
    <BOUNDS type="Node" left="5265" top="3615" width="705" height="270">

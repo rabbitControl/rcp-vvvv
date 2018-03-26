@@ -55,6 +55,8 @@
    </PIN>
    <PIN pinname="Behavior" slicecount="1" values="Bang">
    </PIN>
+   <PIN pinname="X Input Value" slicecount="1" values="0">
+   </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="7">
    <BOUNDS type="Node" left="2220" top="1935" width="3330" height="270">
@@ -265,7 +267,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="1365" top="1440" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10000">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10001">
    </PIN>
    <PIN pinname="Units" slicecount="1" values="||">
    </PIN>
