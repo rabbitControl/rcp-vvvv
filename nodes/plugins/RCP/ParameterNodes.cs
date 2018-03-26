@@ -126,13 +126,17 @@ namespace VVVV.Nodes
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			FId.AssignFrom(FParameter.Select(p => p.Id.ToIdString()));
-			FDatatype.AssignFrom(FParameter.Select(p => p.Datatype));
-			FTypeDefinition.AssignFrom(FParameter.Select(p => p.TypeDefinition));
-			FValue.AssignFrom(FParameter.Select(p => p.Value));
-			FLabel.AssignFrom(FParameter.Select(p => p.Label));
-//			FParent.AssignFrom(FParameter.Select(p => p.Parent?.ToIdString() ?? ""));
-			FUserdata.AssignFrom(FParameter.Select(p => p.Userdata));
+			try
+			{
+				FId.AssignFrom(FParameter.Select(p => p.Id.ToIdString()));
+				FDatatype.AssignFrom(FParameter.Select(p => p.Datatype));
+				FTypeDefinition.AssignFrom(FParameter.Select(p => p.TypeDefinition));
+				FValue.AssignFrom(FParameter.Select(p => p.Value));
+				FLabel.AssignFrom(FParameter.Select(p => p.Label));
+		//			FParent.AssignFrom(FParameter.Select(p => p.Parent?.ToIdString() ?? ""));
+				FUserdata.AssignFrom(FParameter.Select(p => p.Userdata));
+			}
+			catch {}
 		}
 	}
 	
