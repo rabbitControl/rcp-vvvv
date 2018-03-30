@@ -48,6 +48,9 @@ namespace VVVV.Nodes
 		[Input("Port", IsSingle=true, DefaultValue = 10000)]
 		public IDiffSpread<int> FPort; 
 		
+		[Input("Update Enums", IsSingle=true, IsBang=true)]
+		public ISpread<bool> FUpdateEnums; 
+		
 		[Output("Connection Count")]
 		public ISpread<int> FConnectionCount;
 		//public ISpread<byte> FOutput;
@@ -135,6 +138,16 @@ namespace VVVV.Nodes
 			
 			if (FHost.IsChanged || FPort.IsChanged)
 				FTransporter.Bind(FHost[0], FPort[0]);
+			
+			//TODO: subscribe to enum-changes on the host and update all related
+			//parameters as changes happen, so a client can update its gui accordingly
+			if (FUpdateEnums[0])
+			{
+				var enumPins = FCachedPins.Values.Where(v => v.Type == "Enumeration");
+				
+				foreach (var enumPin in enumPins)
+					PinValueChanged(enumPin, null);
+			}
 
 			//process FParameterQueue
 			//in order to handle all messages from main thread
@@ -151,34 +164,6 @@ namespace VVVV.Nodes
 			}
 			
 			FConnectionCount[0] = FTransporter.ConnectionCount;
-			
-//        	var def = new Float32Definition();
-//        	def.Minimum = -99999999f;
-//			def.Maximum = 99999999f;
-//
-//        	var def2 = new StringDefinition();
-//        	def2.Default = "";
-//
-//        	var p = new StringParameter(9, def2);
-//			//p.Label = "foo";
-//			p.Value = "1.7f";
-//			
-//			var pack = new Packet(RcpTypes.Command.Add);
-//			pack.Data = p;
-//			
-//        	using (var stream = new MemoryStream())
-//			using (var writer = new BinaryWriter(stream))
-//			{
-//				pack.Write(writer);
-//				var bytes = stream.ToArray();
-//				FOutput.AssignFrom(bytes);
-//				
-//				if (FInput[0] > 0)
-//				{
-//					 var pp = Packet.Parse(new KaitaiStream(bytes));
-//					FLogger.Log(LogType.Debug, ((dynamic)pp.Data).Id.ToString());
-//				}	
-//			}
 		}
 		
 		private void NodeAddedCB(INode2 node)
@@ -637,6 +622,7 @@ namespace VVVV.Nodes
 				var paramDef = param.TypeDefinition as EnumDefinition;
 				paramDef.Default = newDef.Default;
 				paramDef.Entries = newDef.Entries;
+				FLogger.Log(LogType.Debug, "count: " + newDef.Entries[0]);
 			}
 			param = RCP.Helpers.StringToValue(param, pin.Spread);
 			
@@ -977,7 +963,10 @@ namespace RCP
 		
 		public static string EnumToString(ushort input, string[] entries)
 		{
-			return entries[input];
+			if (input > 0 && input < entries.Length)
+				return entries[input];
+			else
+				return "";
 		}
 		
 		public static string Vector2f32ToString(V2 input)
