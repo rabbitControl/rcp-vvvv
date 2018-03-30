@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50beta36.dtd" >
    <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="0" scrolly="-360">
-   <BOUNDS type="Window" left="10380" top="2445" width="9540" height="9900">
+   <BOUNDS type="Window" left="10380" top="2445" width="12255" height="9900">
    </BOUNDS>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="3">
    <BOUNDS type="Node" left="225" top="225" width="5100" height="450">
@@ -355,6 +355,8 @@
    </PIN>
    <PIN pinname="Userdata" visible="1">
    </PIN>
+   <PIN pinname="Widget" visible="1">
+   </PIN>
    </NODE>
    <NODE nodename="Stick (RCP)" componentmode="Hidden" id="29">
    <BOUNDS type="Node" left="1065" top="2415" width="0" height="0">
@@ -501,7 +503,9 @@
    </PIN>
    <PIN pinname="Maximum Characters" slicecount="1" values="-1">
    </PIN>
-   <PIN pinname="Columns" slicecount="1" values="6">
+   <PIN pinname="Columns" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="6">
    </PIN>
    </NODE>
    <LINK srcnodeid="28" srcpinname="Userdata" dstnodeid="37" dstpinname="Input String">
@@ -510,4 +514,24 @@
    </LINK>
    <PACK Name="dx11" Version="1.2">
    </PACK>
+   <NODE nodename="IOBox (String)" componentmode="InABox" id="38">
+   <BOUNDS type="Box" left="9150" top="4470" width="1380" height="1605">
+   </BOUNDS>
+   <BOUNDS type="Node" left="9150" top="4470" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Default" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="File Mask" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Maximum Characters" slicecount="1" values="-1">
+   </PIN>
+   <PIN pinname="Columns" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Input String" visible="1" slicecount="1" values="default">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="6">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="28" srcpinname="Widget" dstnodeid="38" dstpinname="Input String">
+   </LINK>
    </PATCH>

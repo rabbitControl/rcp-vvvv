@@ -13,6 +13,7 @@ using VVVV.Core.Logging;
 using RCP;
 using RCP.Model;
 using RCP.Parameter;
+using RCP.Protocol;
 using RCP.Transporter;
 
 using Kaitai;
@@ -22,29 +23,42 @@ namespace VVVV.Nodes
 {
 	public class Parameter
 	{
-		byte[] FId, FParent;
-		string FDatatype, FTypeDefinition, FValue, FLabel, FUserdata;
+		string FId, FDatatype, FTypeDefinition, FValue, FLabel, FParent, FWidget, FUserdata;
 		
 		public Parameter ()
 		{}
 		
-		public Parameter (byte[] id, string datatype, string typeDefinition, string value, string label, byte[] parent, string userdata)
+		public Parameter (byte[] id, string datatype, string typeDefinition, string value, string label, byte[] parent, Widget widget, string userdata)
 		{
-			FId = id;
+			FId = id.ToIdString();
 			FDatatype = datatype;
 			FTypeDefinition = typeDefinition;
 			FValue = value;
 			FLabel = label;
-			FParent = parent;
+			FParent = parent.ToIdString();
 			FUserdata = userdata;
+			
+			if (widget is BangWidget)
+				FWidget = "bang";
+			else if (widget is PressWidget)
+				FWidget = "press";
+			else if (widget is ToggleWidget)
+				FWidget = "toggle";
+			else if (widget is SliderWidget)
+				FWidget = "slider";
+			else if (widget is EndlessWidget)
+				FWidget = "endless";
+			else 
+				FWidget = "default";
 		}
 
-		public byte[] Id => FId;
+		public string Id => FId;
 		public string Datatype => FDatatype;
 		public string TypeDefinition => FTypeDefinition;
 		public string Value => FValue;
 		public string Label => FLabel;
-		public byte[] Parent => FParent;	
+		public string Parent => FParent;	
+		public string Widget => FWidget;	
 		public string Userdata => FUserdata;
 	}
 	
@@ -75,7 +89,7 @@ namespace VVVV.Nodes
 			else
 			{
 				var groups = FGroup.ToList();
-				FParametersOut.AssignFrom(FParameters.Where(p => groups.Contains(p.Parent.ToIdString())));
+				FParametersOut.AssignFrom(FParameters.Where(p => groups.Contains(p.Parent)));
 			}
 		}
 	}
@@ -113,8 +127,8 @@ namespace VVVV.Nodes
 //		[Output("Parent")]
 //		public ISpread<string> FParent;
 		
-//		[Output("Widget")]
-//		public ISpread<string> FWidget;
+		[Output("Widget")]
+		public ISpread<string> FWidget;
 		
 		[Output("Userdata")]
 		public ISpread<string> FUserdata;
@@ -128,11 +142,12 @@ namespace VVVV.Nodes
 		{
 			try
 			{
-				FId.AssignFrom(FParameter.Select(p => p.Id.ToIdString()));
+				FId.AssignFrom(FParameter.Select(p => p.Id));
 				FDatatype.AssignFrom(FParameter.Select(p => p.Datatype));
 				FTypeDefinition.AssignFrom(FParameter.Select(p => p.TypeDefinition));
 				FValue.AssignFrom(FParameter.Select(p => p.Value));
 				FLabel.AssignFrom(FParameter.Select(p => p.Label));
+				FWidget.AssignFrom(FParameter.Select(p => p.Widget));
 		//			FParent.AssignFrom(FParameter.Select(p => p.Parent?.ToIdString() ?? ""));
 				FUserdata.AssignFrom(FParameter.Select(p => p.Userdata));
 			}
@@ -170,8 +185,8 @@ namespace VVVV.Nodes
 //		[Input("Parent")]
 //		public ISpread<string> FParent;
 		
-//		[Output("Widget")]
-//		public ISpread<string> FWidget;
+		[Input("Widget")]
+		public ISpread<string> FWidget;
 		
 		[Input("Userdata")]
 		public ISpread<string> FUserdata;
@@ -192,7 +207,17 @@ namespace VVVV.Nodes
 			FParams.Clear();
 			for (int i=0; i<SpreadMax; i++)
 			{
-				var param = new Parameter(FId[i].ToRCPId(), FDatatype[i], FTypeDefinition[i], FValue[i], FLabel[i], new byte[0]{}/*FParent[i].ToRCPId()*/, FUserdata[i]);
+				Widget widget = null;
+				switch (FWidget[i].ToLower())
+				{
+					case "bang": widget = new BangWidget(); break;
+					case "press": widget = new PressWidget(); break;
+					case "toggle": widget = new ToggleWidget(); break;
+					case "slider": widget = new SliderWidget(); break;
+					case "endless": widget = new EndlessWidget(); break;
+				}
+				
+				var param = new Parameter(FId[i].ToRCPId(), FDatatype[i], FTypeDefinition[i], FValue[i], FLabel[i], new byte[0]{}/*FParent[i].ToRCPId()*/, widget, FUserdata[i]);
 				FParams.Add(param);
 			}	
 			

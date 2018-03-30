@@ -151,7 +151,7 @@ namespace VVVV.Nodes
 				var datatype = p.TypeDefinition.Datatype.ToString();
 				var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
 				var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
-				var param = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, userdata);
+				var param = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, p.Widget, userdata);
 				ps.Add(param);
 			}
 			FParameters.AssignFrom(ps);
@@ -171,7 +171,7 @@ namespace VVVV.Nodes
 			var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
 			
 			var orderedParams = FParamIds.Select(pid => FRCPClient.GetParameter(pid)).OrderBy(param => param.Order).ToList();
-			FParameters[orderedParams.IndexOf(p)] = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, userdata);
+			FParameters[orderedParams.IndexOf(p)] = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, p.Widget, userdata);
 		}
 	}
 	

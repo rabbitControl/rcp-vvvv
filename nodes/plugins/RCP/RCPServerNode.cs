@@ -313,6 +313,15 @@ namespace VVVV.Nodes
 							
 							parameter = GetNumberParameter<float>(id, sliceCount, 1, def, pin, (p,i) => RCP.Helpers.GetFloat(p,i));
 						}
+						
+						switch (subtype[0])
+						{
+							case "Bang": parameter.Widget = new BangWidget(); break;
+							case "Press": parameter.Widget = new PressWidget(); break;
+							case "Toggle": parameter.Widget = new ToggleWidget(); break;
+							case "Slider": parameter.Widget = new SliderWidget(); break;
+							case "Endless": parameter.Widget = new EndlessWidget(); break;
+						}
 					}
 					else if (dimensions == 2)
 					{
@@ -349,24 +358,81 @@ namespace VVVV.Nodes
 				
 				case "String": 
 				{
-					var def = new StringDefinition();
-					def.Default = subtype[1];
-					
-					if (sliceCount > 1)
+					var schema = subtype[0].ToLower();
+					if (schema == "filename" || schema == "directory")
 					{
-						var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
-						var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
-						var values = new List<string>();
-						for (int i=0; i<sliceCount; i++)
-							values.Add(pin[i]);
-						param.Value = values; 
-						parameter = param;
+						var def = new UriDefinition();
+						def.Default = subtype[1];
+						def.Schema = "file";
+						if (schema == "filename")
+							def.Filter = subtype[2];
+						
+						if (sliceCount > 1)
+						{
+							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
+							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
+							var values = new List<string>();
+							for (int i=0; i<sliceCount; i++)
+								values.Add(pin[i]);
+							param.Value = values; 
+							parameter = param;
+						}
+						else
+						{
+							var param = new UriParameter(id, def as IUriDefinition);
+							
+							var v = pin[0].TrimEnd('\\').Replace("\\", "/");
+							if (schema == "directory")
+								v += "/";
+								
+							param.Value = v;
+							parameter = param;
+						}
 					}
-					else
+					else if (schema == "url")
 					{
-						var param = new StringParameter(id, def as IStringDefinition); 
-						param.Value = pin[0];
-						parameter = param;
+						var def = new UriDefinition();
+						def.Default = subtype[1];
+						def.Schema = "http://";
+						
+						if (sliceCount > 1)
+						{
+							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
+							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
+							var values = new List<string>();
+							for (int i=0; i<sliceCount; i++)
+								values.Add(pin[i]);
+							param.Value = values; 
+							parameter = param;
+						}
+						else
+						{
+							var param = new UriParameter(id, def as IUriDefinition);
+							param.Value = pin[0];
+							parameter = param;
+						}
+					}
+					else 
+					{
+						var def = new StringDefinition();
+						def.Default = subtype[1];
+						
+						if (sliceCount > 1)
+						{
+							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
+							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
+							var values = new List<string>();
+							for (int i=0; i<sliceCount; i++)
+								values.Add(pin[i]);
+							param.Value = values; 
+							parameter = param;
+						}
+						else
+						{
+							var param = new StringParameter(id, def as IStringDefinition); 
+							param.Value = pin[0];
+							parameter = param;
+						}
 					}
 					
 					break;
@@ -971,6 +1037,12 @@ namespace RCP
 					{
 						var def = (IStringDefinition)definition;
 						return def.Default;
+					}
+					
+					case RcpTypes.Datatype.Uri:
+					{
+						var def = (IUriDefinition)definition;
+						return def.Default + ", " + def.Schema + ", " + def.Filter;
 					}
 					
 					case RcpTypes.Datatype.Rgba:

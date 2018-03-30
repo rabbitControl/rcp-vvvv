@@ -1,0 +1,101 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50beta36.dtd" >
+   <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\RCP-JS.v4p" systemname="RCP-JS" filename="C:\Users\joreg\Documents\repos\rcp-csharp\demos\vvvv\RCP-JS.v4p">
+   <NODE systemname="HTTP (Network Server)" nodename="HTTP (Network Server)" componentmode="Hidden" id="0">
+   <BOUNDS type="Node" left="1680" top="3810" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Port" slicecount="1" values="81">
+   </PIN>
+   <PIN pinname="URL" visible="1">
+   </PIN>
+   <PIN pinname="Content" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Reader (String)" filename="%VVVV%\lib\nodes\modules\String\Reader (String).v4p" nodename="Reader (String)" componentmode="Hidden" id="1">
+   <BOUNDS type="Node" left="1950" top="3195" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Filename" visible="1" slicecount="8" values="..\..\..\rcp-js-client\index.html,..\..\..\rcp-js-client\KaitaiStream.js,..\..\..\rcp-js-client\Optionstest.js,..\..\..\rcp-js-client\RcpTypes.js,..\..\..\rcp-js-client\TOI.js,..\..\..\rcp-js-client\ToiTypes.js,..\..\..\rcp-js-client\index.html,..\..\..\rcp-js-client\KaitaiStream.js">
+   </PIN>
+   <PIN pinname="Read" visible="1">
+   </PIN>
+   <PIN pinname="Content" visible="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="2" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="2685" top="1995" width="480" height="480">
+   </BOUNDS>
+   <BOUNDS type="Node" left="2685" top="1995" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="0">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Boolean">
+   </PIN>
+   <PIN pinname="Behavior" slicecount="1" values="Bang">
+   </PIN>
+   <PIN pinname="X Input Value" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Reload">
+   </PIN>
+   </NODE>
+   <NODE systemname="Dir (File)" nodename="Dir (File)" componentmode="Hidden" id="3">
+   <BOUNDS type="Node" left="1500" top="1920" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Mask" slicecount="1" values="*.*">
+   </PIN>
+   <PIN pinname="Directory" slicecount="1" visible="1" values="..\..\..\rcp-js-client">
+   </PIN>
+   <PIN pinname="Filenames" visible="1">
+   </PIN>
+   <PIN pinname="Short Filenames" visible="1">
+   </PIN>
+   <PIN pinname="Update" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (String)" componentmode="InABox" id="4" systemname="IOBox (String)">
+   <BOUNDS type="Box" left="1665" top="1500" width="1695" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="1665" top="1500" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Input String" slicecount="1" visible="1" values="..\..\..\..\rcp-js-client">
+   </PIN>
+   <PIN pinname="Default" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="File Mask" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Maximum Characters" slicecount="1" values="-1">
+   </PIN>
+   <PIN pinname="String Type" slicecount="1" values="Directory">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="4" srcpinname="Output String" dstnodeid="3" dstpinname="Directory">
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Short Filenames" dstnodeid="0" dstpinname="URL">
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Content" dstnodeid="0" dstpinname="Content">
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Filenames" dstnodeid="1" dstpinname="Filename">
+   </LINK>
+   <BOUNDS type="Window" left="19500" top="9105" width="4245" height="5040">
+   </BOUNDS>
+   <PACK Name="addonpack" Version="36.0.0">
+   </PACK>
+   <NODE systemname="OnOpen (VVVV)" nodename="OnOpen (VVVV)" componentmode="Hidden" id="5">
+   <BOUNDS type="Node" left="2685" top="2700" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Simulate" visible="1">
+   </PIN>
+   <PIN pinname="Bang" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="2" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Simulate">
+   </LINK>
+   <LINK srcnodeid="5" srcpinname="Bang" dstnodeid="1" dstpinname="Read">
+   </LINK>
+   <PACK Name="dx11" Version="1.2">
+   </PACK>
+   </PATCH>
