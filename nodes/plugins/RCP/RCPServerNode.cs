@@ -622,9 +622,9 @@ namespace VVVV.Nodes
 				var paramDef = param.TypeDefinition as EnumDefinition;
 				paramDef.Default = newDef.Default;
 				paramDef.Entries = newDef.Entries;
-				FLogger.Log(LogType.Debug, "count: " + newDef.Entries[0]);
+				//FLogger.Log(LogType.Debug, "count: " + pin.Spread);
 			}
-			param = RCP.Helpers.StringToValue(param, pin.Spread);
+			param = RCP.Helpers.StringToValue(param, pin.Spread.Trim('|'));
 			
 			FRCPServer.UpdateParameter(param);
 			
@@ -963,7 +963,7 @@ namespace RCP
 		
 		public static string EnumToString(ushort input, string[] entries)
 		{
-			if (input > 0 && input < entries.Length)
+			if (input >= 0 && input < entries.Length)
 				return entries[input];
 			else
 				return "";
