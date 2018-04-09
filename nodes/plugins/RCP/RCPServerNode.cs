@@ -737,6 +737,9 @@ namespace RCP
 		
 		public static string PipeUnEscape(string input)
 		{
+			if (string.IsNullOrEmpty(input))
+				return input;
+			
 			if (input[0] == '|' && input[input.Length-1] == '|')
 				input = input.Substring(1, input.Length-2);
 			return input.Replace("||", "|");
