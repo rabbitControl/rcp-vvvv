@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50beta36.dtd" >
    <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="0" scrolly="-360">
-   <BOUNDS type="Window" left="10380" top="2445" width="12255" height="9900">
+   <BOUNDS type="Window" left="11820" top="3360" width="11295" height="9450">
    </BOUNDS>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="3">
    <BOUNDS type="Node" left="225" top="225" width="5100" height="450">
@@ -31,13 +31,13 @@
    </BOUNDS>
    <PIN pinname="Client" visible="1" slicecount="1" values="||">
    </PIN>
-   <PIN pinname="ID" visible="1" slicecount="1" values="0">
+   <PIN pinname="ID" visible="1" slicecount="1" values="|/74/51/Input String|">
    </PIN>
    <PIN pinname="Input" visible="1" slicecount="1" values="||">
    </PIN>
    <PIN pinname="Send" visible="1" slicecount="1" values="0">
    </PIN>
-   <PIN pinname="Value" visible="1" slicecount="1" values="||">
+   <PIN pinname="Value" visible="1" slicecount="1" values="|we,2,3,||4||||4||,5|">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="6">
@@ -101,7 +101,7 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="10">
-   <BOUNDS type="Box" left="1530" top="6825" width="795" height="240">
+   <BOUNDS type="Box" left="1530" top="6825" width="1425" height="270">
    </BOUNDS>
    <BOUNDS type="Node" left="1530" top="6825" width="0" height="0">
    </BOUNDS>
@@ -133,6 +133,8 @@
    </PIN>
    <PIN pinname="Behavior" slicecount="1" values="Bang">
    </PIN>
+   <PIN pinname="X Input Value" slicecount="1" values="0">
+   </PIN>
    </NODE>
    <LINK srcnodeid="11" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Send">
    </LINK>
@@ -153,9 +155,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="14">
-   <BOUNDS type="Node" left="2445" top="6795" width="930" height="270">
+   <BOUNDS type="Node" left="4035" top="6795" width="930" height="270">
    </BOUNDS>
-   <BOUNDS type="Box" left="2445" top="6795" width="930" height="270">
+   <BOUNDS type="Box" left="4035" top="6795" width="945" height="285">
    </BOUNDS>
    <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; the value|">
    </PIN>
@@ -237,7 +239,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="1245" top="6420" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Input String" slicecount="1" visible="1" values="0">
+   <PIN pinname="Input String" slicecount="1" visible="1" values="||">
    </PIN>
    <PIN pinname="Default" slicecount="1" values="||">
    </PIN>
@@ -358,24 +360,6 @@
    <PIN pinname="Widget" visible="1">
    </PIN>
    </NODE>
-   <NODE nodename="Stick (RCP)" componentmode="Hidden" id="29">
-   <BOUNDS type="Node" left="1065" top="2415" width="0" height="0">
-   </BOUNDS>
-   <BOUNDS type="Box" left="1065" top="2415" width="0" height="0">
-   </BOUNDS>
-   <PIN pinname="Parameters" visible="1">
-   </PIN>
-   </NODE>
-   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="29" dstpinname="Initialize">
-   </LINK>
-   <LINK srcnodeid="29" srcpinname="Client" dstnodeid="5" dstpinname="Client">
-   </LINK>
-   <LINK srcnodeid="22" srcpinname="Output String" dstnodeid="29" dstpinname="Remote Host">
-   </LINK>
-   <LINK srcnodeid="23" srcpinname="Y Output Value" dstnodeid="29" dstpinname="Remote Port">
-   </LINK>
-   <LINK srcnodeid="29" srcpinname="Connected" dstnodeid="26" dstpinname="Y Input Value">
-   </LINK>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="30">
    <BOUNDS type="Box" left="1665" top="4485" width="1845" height="1590">
    </BOUNDS>
@@ -460,8 +444,6 @@
    <PIN pinname="Group" slicecount="1" visible="1" values="||">
    </PIN>
    </NODE>
-   <LINK srcnodeid="29" srcpinname="Parameters" dstnodeid="34" dstpinname="Input">
-   </LINK>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="35">
    <BOUNDS type="Node" left="3330" top="3330" width="2505" height="270">
    </BOUNDS>
@@ -533,5 +515,23 @@
    </PIN>
    </NODE>
    <LINK srcnodeid="28" srcpinname="Widget" dstnodeid="38" dstpinname="Input String">
+   </LINK>
+   <NODE nodename="Stick (RCP)" componentmode="Hidden" id="39">
+   <BOUNDS type="Node" left="1065" top="2415" width="0" height="0">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1065" top="2415" width="0" height="0">
+   </BOUNDS>
+   </NODE>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="39" dstpinname="Initialize">
+   </LINK>
+   <LINK srcnodeid="39" srcpinname="Client" dstnodeid="5" dstpinname="Client">
+   </LINK>
+   <LINK srcnodeid="22" srcpinname="Output String" dstnodeid="39" dstpinname="Remote Host">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="Y Output Value" dstnodeid="39" dstpinname="Remote Port">
+   </LINK>
+   <LINK srcnodeid="39" srcpinname="Connected" dstnodeid="26" dstpinname="Y Input Value">
+   </LINK>
+   <LINK srcnodeid="39" srcpinname="Parameters" dstnodeid="34" dstpinname="Input">
    </LINK>
    </PATCH>

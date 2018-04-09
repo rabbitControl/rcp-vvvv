@@ -146,7 +146,7 @@ namespace VVVV.Nodes
 			{
 				string v = "null";
 				if (p.Value != null)
-					v = RCP.Helpers.ValueToString(p);
+					v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
 				
 				var datatype = p.TypeDefinition.Datatype.ToString();
 				var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
@@ -164,7 +164,7 @@ namespace VVVV.Nodes
 			string v = "null";
 			dynamic dp = p;
 			if (dp.Value != null)
-				v = RCP.Helpers.ValueToString(dp);
+				v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(dp));
 			
 			var datatype = p.TypeDefinition.Datatype.ToString();
 			var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);

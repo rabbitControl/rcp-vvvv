@@ -185,7 +185,7 @@ namespace VVVV.Nodes
 			var param = ParameterFromNode(node, parentId);
 			AddParamToPatch(parentId, param);
 			
-			OutputBytes(param);
+			//OutputBytes(param);
 
 			FRCPServer.AddParameter(param);
 		}
@@ -624,12 +624,11 @@ namespace VVVV.Nodes
 				paramDef.Entries = newDef.Entries;
 				//FLogger.Log(LogType.Debug, "count: " + pin.Spread);
 			}
-			param = RCP.Helpers.StringToValue(param, pin.Spread.Trim('|'));
+			param = RCP.Helpers.StringToValue(param, pin.Spread);
 			
 			FRCPServer.UpdateParameter(param);
 			
-			//FLogger.Log(LogType.Debug, pin.Spread);
-			OutputBytes(param);
+			//OutputBytes(param);
 		}
 		
 		private void OutputBytes(IParameter param)
@@ -655,6 +654,21 @@ namespace RCP
 {
 	public static class Helpers
 	{
+		//vvvv string/enum escaping rules:
+		//if a slice contains either a space " ", a pipe "|" or a comma ","
+		//the slice is quoted with pipes "|like so|"
+		//and also every pipe is escaped with another pipe "|like||so|" to encode a string like "like|so"
+		
+		private static string PipeEscape(string input)
+		{
+			if (input.Contains(",") || input.Contains("|") || input.Contains(" "))
+			{
+				input = input.Replace("|", "||");
+				input = "|" + input + "|";
+			}
+			return input;
+		}
+		
 		public static string ValueToString(dynamic param)
 		{
 			try
@@ -662,7 +676,8 @@ namespace RCP
 				switch ((RcpTypes.Datatype)param.TypeDefinition.Datatype)
 				{
 					case RcpTypes.Datatype.Boolean: return RCP.Helpers.BoolToString(param.Value);
-					case RcpTypes.Datatype.Enum: return RCP.Helpers.EnumToString(param.Value, ((IEnumDefinition)param.TypeDefinition).Entries);
+					case RcpTypes.Datatype.String: return PipeEscape(param.Value.ToString());
+					case RcpTypes.Datatype.Enum: return PipeEscape(RCP.Helpers.EnumToString(param.Value, ((IEnumDefinition)param.TypeDefinition).Entries));
 					case RcpTypes.Datatype.Float32: return RCP.Helpers.Float32ToString(param.Value);
 					case RcpTypes.Datatype.Vector2f32: return RCP.Helpers.Vector2f32ToString(param.Value);
 					case RcpTypes.Datatype.Vector3f32: return RCP.Helpers.Vector3f32ToString(param.Value);
@@ -680,7 +695,7 @@ namespace RCP
 							{
 								//TODO; accessing the subtypes entries fails
 								var val = ((ArrayParameter<ushort>)param).Value;
-								return string.Join(",", val.Select(v => EnumToString(v, ((IEnumDefinition)((ArrayDefinition<ushort>)param.TypeDefinition).Subtype).Entries)));
+								return string.Join(",", val.Select(v => PipeEscape(EnumToString(v, ((IEnumDefinition)((ArrayDefinition<ushort>)param.TypeDefinition).Subtype).Entries))));
 							}						
 							case RcpTypes.Datatype.Int32:
 							{
@@ -700,7 +715,7 @@ namespace RCP
 							case RcpTypes.Datatype.String:
 							{
 								var val = ((ArrayParameter<string>)param).Value;
-								return string.Join(",", val);
+								return string.Join(",", val.Select(v => PipeEscape(v)));
 							}
 							case RcpTypes.Datatype.Rgba:
 							{
@@ -720,6 +735,13 @@ namespace RCP
 			}
 		}
 		
+		public static string PipeUnEscape(string input)
+		{
+			if (input[0] == '|' && input[input.Length-1] == '|')
+				input = input.Substring(1, input.Length-2);
+			return input.Replace("||", "|");
+		}
+		
 		//sets the value given as string on the given parameter
 		public static IParameter StringToValue(dynamic param, string input)
 		{
@@ -737,7 +759,7 @@ namespace RCP
 					case RcpTypes.Datatype.Enum:
 					{
 						var p = (EnumParameter)param;
-						p.Value = ParseEnum(input, ((IEnumDefinition)param.TypeDefinition).Entries);
+						p.Value = ParseEnum(PipeUnEscape(input), ((IEnumDefinition)param.TypeDefinition).Entries);
 						return p;
 					}
 					
@@ -758,7 +780,7 @@ namespace RCP
 					case RcpTypes.Datatype.String:
 					{
 						var p = (StringParameter)param;
-						p.Value = input;
+						p.Value = PipeUnEscape(input);
 						return p;
 					}
 					
@@ -798,7 +820,7 @@ namespace RCP
 							case RcpTypes.Datatype.Enum:
 							{
 								var p = (ArrayParameter<ushort>)param;
-								p.Value = input.Split(',').Select(s => ParseEnum(s, ((IEnumDefinition)param.TypeDefinition).Entries)).ToList();
+								p.Value = SplitToSlices(input).Select(s => ParseEnum(PipeUnEscape(s), ((IEnumDefinition)param.TypeDefinition).Entries)).ToList();
 								return p;
 							}
 							
@@ -812,7 +834,7 @@ namespace RCP
 							case RcpTypes.Datatype.String:
 							{
 								var p = (ArrayParameter<string>)param;
-								p.Value = input.Split(',').ToList();
+								p.Value = SplitToSlices(input).Select(s => PipeUnEscape(s)).ToList();
 								return p;
 							}
 							
@@ -847,8 +869,7 @@ namespace RCP
 							{
 								var p = (ArrayParameter<Color>)param;
 								//split at commas outside of pipes
-								var slices = Regex.Split(input, @",(?=(?:[^\|]*\|[^\|]*\|)*[^\|]*$)");
-								p.Value = slices.Select(s => ParseColor(s)).ToList();
+								p.Value = SplitToSlices(input).Select(s => ParseColor(s)).ToList();
 								return p;
 							}
 						}
@@ -862,6 +883,11 @@ namespace RCP
 			}
 			
 			return param;
+		}
+		
+		private static List<string> SplitToSlices(string input)
+		{
+			return Regex.Split(input, @",(?=(?:[^\|]*\|[^\|]*\|)*[^\|]*$)").ToList();
 		}
 		
 		public static V2 GetVector2(IPin2 pin, int index)
