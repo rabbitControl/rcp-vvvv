@@ -28,14 +28,14 @@ namespace VVVV.Nodes
 		public Parameter ()
 		{}
 		
-		public Parameter (byte[] id, string datatype, string typeDefinition, string value, string label, byte[] parent, Widget widget, string userdata)
+		public Parameter (short id, string datatype, string typeDefinition, string value, string label, short parent, Widget widget, string userdata)
 		{
-			FId = id.ToIdString();
+			FId = id.ToString();
 			FDatatype = datatype;
 			FTypeDefinition = typeDefinition;
 			FValue = value;
 			FLabel = label;
-			FParent = parent.ToIdString();
+			FParent = parent.ToString();
 			FUserdata = userdata;
 			
 			if (widget is BangWidget)
@@ -46,7 +46,7 @@ namespace VVVV.Nodes
 				FWidget = "toggle";
 			else if (widget is SliderWidget)
 				FWidget = "slider";
-			else if (widget is EndlessWidget)
+			else if (widget is NumberboxWidget)
 				FWidget = "endless";
 			else 
 				FWidget = "default";
@@ -214,11 +214,11 @@ namespace VVVV.Nodes
 					case "press": widget = new PressWidget(); break;
 					case "toggle": widget = new ToggleWidget(); break;
 					case "slider": widget = new SliderWidget(); break;
-					case "endless": widget = new EndlessWidget(); break;
+					case "endless": widget = new NumberboxWidget(); break;
 				}
 				
-				var param = new Parameter(FId[i].ToRCPId(), FDatatype[i], FTypeDefinition[i], FValue[i], FLabel[i], new byte[0]{}/*FParent[i].ToRCPId()*/, widget, FUserdata[i]);
-				FParams.Add(param);
+//				var param = new Parameter(FId[i].ToRCPId(), FDatatype[i], FTypeDefinition[i], FValue[i], FLabel[i], new byte[0]{}/*FParent[i].ToRCPId()*/, widget, FUserdata[i]);
+//				FParams.Add(param);
 			}	
 			
 			FParameter.AssignFrom(FParams);

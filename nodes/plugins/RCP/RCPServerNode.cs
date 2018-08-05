@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using System.Drawing;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 
 using VVVV.PluginInterfaces.V1;
@@ -64,6 +65,7 @@ namespace VVVV.Nodes
 		RCPServer FRCPServer;
 		WebsocketServerTransporter FTransporter;
 		Dictionary<string, IPin2> FCachedPins = new Dictionary<string, IPin2>();
+		Dictionary<string, IParameter> FCachedParams = new Dictionary<string, IParameter>();
 		Dictionary<string, List<IParameter>> FParameters = new Dictionary<string, List<IParameter>>();
 		
 		List<IParameter> FParameterQueue = new List<IParameter>();
@@ -73,9 +75,6 @@ namespace VVVV.Nodes
 		{ 
 			//initialize the RCP Server
 			FRCPServer = new RCPServer();
-  
-			//subscribe to the parameter-updated event
-			FRCPServer.ParameterUpdated = ParameterUpdated;
 		}
 		
 		public void OnImportsSatisfied()
@@ -99,12 +98,12 @@ namespace VVVV.Nodes
 			{
 				//FLogger.Log(LogType.Debug, "ps: " + parentId);
 				
-				var newParent = GroupMap.GetName(parentId).ToRCPId();
-				foreach (var param in parameters)
-				{
-					param.Parent = newParent;
-					FRCPServer.UpdateParameter(param);
-				}
+//				var newParent = GroupMap.GetName(parentId).ToRCPId();
+//				foreach (var param in parameters)
+//				{
+//					param.Parent = newParent;
+//					FRCPServer.UpdateParameter(param);
+//				}
 			}
 		}
 		
@@ -122,6 +121,7 @@ namespace VVVV.Nodes
 			
 			//clear cached pins
 			FCachedPins.Clear();
+			FCachedParams.Clear();
 			//FNodeToIdMap.Clear();
 			
 			FParameterQueue.Clear();
@@ -157,8 +157,15 @@ namespace VVVV.Nodes
 				foreach (var param in FParameterQueue)
 				{
 					IPin2 pin;
-					if (FCachedPins.TryGetValue(param.Id.ToIdString(), out pin))
-						pin.Spread = RCP.Helpers.ValueToString(param);
+					if (FParameterQueue.Any())
+						FLogger.Log(LogType.Debug, "updates: " + FParameterQueue.Count.ToString());
+					if (FCachedPins.TryGetValue(param.UserId, out pin))
+						{
+//							pin.Spread = RCP.Helpers.ValueToString(param);
+							pin.Spread = RCP.Helpers.Float32ToString(((IValueParameter<float>)param).Value);
+							FLogger.Log(LogType.Debug, "userid: " + param.UserId);
+							FLogger.Log(LogType.Debug, "spread: " + pin.Spread);
+						}
 				}
 				FParameterQueue.Clear();
 			}
@@ -178,16 +185,17 @@ namespace VVVV.Nodes
 			//tag
 			//default, min, max, ...
 			
-			var id = IdFromPin(pin);
-			FCachedPins.Add(id, pin);
+			var userId = IdFromPin(pin);
+			FCachedPins.Add(userId, pin);
 			
 			var parentId = ParentIdFromNode(node);
-			var param = ParameterFromNode(node, parentId);
-			AddParamToPatch(parentId, param);
+			var param = ParameterFromNode(node, userId, parentId);
+			FCachedParams.Add(userId, param);
 			
+			//AddParamToPatch(parentId, param);
 			//OutputBytes(param);
 
-			FRCPServer.AddParameter(param);
+			FRCPServer.Update();
 		}
 		
 		private void NodeRemovedCB(INode2 node)
@@ -199,13 +207,17 @@ namespace VVVV.Nodes
 			var tagPin = node.FindPin("Tag");
 			tagPin.Changed -= TagChanged;
 			
-			var id = IdFromPin(pin);
-			FCachedPins.Remove(id);
+			var userId = IdFromPin(pin);
+			FCachedPins.Remove(userId);
+			FRCPServer.RemoveParameter(FCachedParams[userId]);
+			FCachedParams.Remove(userId);
 			
-			var rcpId = id.ToRCPId();
-			RemoveParamFromPatch(ParentIdFromNode(node), FRCPServer.GetParameter(rcpId));
+			//TODO: unsubscribe from param.ValueUpdated
+//			
+//			var rcpId = id.ToRCPId();
+//			RemoveParamFromPatch(ParentIdFromNode(node), FRCPServer.GetParameter(rcpId));
 			
-			FRCPServer.RemoveParameter(rcpId);
+			FRCPServer.Update();
 		}
 		
 		private string IdFromPin(IPin2 pin)
@@ -239,16 +251,17 @@ namespace VVVV.Nodes
 			return pinName;
 		}
 		
-		private IParameter ParameterFromNode(INode2 node, string parentId)
+		private IParameter ParameterFromNode(INode2 node, string userId, string parentId)
 		{
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
-			var id = IdFromPin(pin).ToRCPId();
+			var id = IdFromPin(pin);
 			
 			IParameter parameter = null;
 			
 			var subtype = pin.SubType.Split(',').Select(s => s.Trim()).ToArray();
 			var sliceCount = pin.SliceCount;
+			var label = pin.ParentNode.LabelPin.Spread.Trim('|');
 			
 			switch(pin.Type)
 			{
@@ -264,39 +277,53 @@ namespace VVVV.Nodes
 						int intStep = 0;
 						float floatStep = 0;
 						
-						if (int.TryParse(subtype[5], out intStep)) //integer
+//						if (int.TryParse(subtype[5], out intStep)) //integer
+//						{
+//	                        var isbool = (subtype[3] == "0") && (subtype[4] == "1");
+//	                        if (isbool)
+//	                        {
+//	                        	var def = new BooleanDefinition();
+//	                        	def.Default = subtype[2] == "1";
+//	                        	
+//	                        	parameter = GetParameter<bool>(id, sliceCount, 1, def, pin, (p,i) => {return p[i] == "1";});
+//	                        }
+//							else
+//							{
+//								var def = new Integer32Definition();
+//								def.Default = RCP.Helpers.ParseInt(subtype[2]);
+//								def.Minimum = RCP.Helpers.ParseInt(subtype[3]);
+//								def.Maximum = RCP.Helpers.ParseInt(subtype[4]);
+//								def.MultipleOf = intStep;
+//								
+//								parameter = GetNumberParameter<int>(id, sliceCount, 1, def, pin, (p,i) => RCP.Helpers.GetInt(p,i));
+//							}
+//						}
+						if (float.TryParse(subtype[5], NumberStyles.Float, CultureInfo.InvariantCulture, out floatStep))
 						{
-	                        var isbool = (subtype[3] == "0") && (subtype[4] == "1");
-	                        if (isbool)
-	                        {
-	                        	var def = new BooleanDefinition();
-	                        	def.Default = subtype[2] == "1";
-	                        	
-	                        	parameter = GetParameter<bool>(id, sliceCount, 1, def, pin, (p,i) => {return p[i] == "1";});
-	                        }
+							var def = RCP.Helpers.ParseFloat(subtype[2]);
+							var min	= RCP.Helpers.ParseFloat(subtype[3]);
+							var max = RCP.Helpers.ParseFloat(subtype[4]);
+							
+							if (sliceCount > 1)
+							{
+								var param = FRCPServer.CreateNumberArrayParameter<float[], float>(label, sliceCount);
+								//param.Default
+								parameter = param;
+							}
 							else
 							{
-								var def = new Integer32Definition();
-								def.Default = RCP.Helpers.ParseInt(subtype[2]);
-								def.Minimum = RCP.Helpers.ParseInt(subtype[3]);
-								def.Maximum = RCP.Helpers.ParseInt(subtype[4]);
-								def.MultipleOf = intStep;
+								var param = FRCPServer.CreateNumberParameter<float>(label);
+	//							int.TryParse(subtype[7], out precision);
+								param.Default = def;
+								param.Minimum = min;
+								param.Maximum = max;
+								param.MultipleOf = floatStep;
+								param.Value = RCP.Helpers.GetFloat(pin, 0);
+								parameter = param;
 								
-								parameter = GetNumberParameter<int>(id, sliceCount, 1, def, pin, (p,i) => RCP.Helpers.GetInt(p,i));
+								param.ValueUpdated += FloatUpdated;
 							}
-						}
-						else if (float.TryParse(subtype[5], NumberStyles.Float, CultureInfo.InvariantCulture, out floatStep))
-						{
-//							uint precision = 0;
-//							uint.TryParse(subtype[7], out precision);
-							
-							var def = new Float32Definition();
-							def.Default = RCP.Helpers.ParseFloat(subtype[2]);
-							def.Minimum = RCP.Helpers.ParseFloat(subtype[3]);
-							def.Maximum = RCP.Helpers.ParseFloat(subtype[4]);
-							def.MultipleOf = floatStep;
-							
-							parameter = GetNumberParameter<float>(id, sliceCount, 1, def, pin, (p,i) => RCP.Helpers.GetFloat(p,i));
+							//parameter = GetNumberParameter<float>(id, sliceCount, 1, def, pin, (p,i) => RCP.Helpers.GetFloat(p,i));
 						}
 						
 						switch (subtype[0])
@@ -305,197 +332,198 @@ namespace VVVV.Nodes
 							case "Press": parameter.Widget = new PressWidget(); break;
 							case "Toggle": parameter.Widget = new ToggleWidget(); break;
 							case "Slider": parameter.Widget = new SliderWidget(); break;
-							case "Endless": parameter.Widget = new EndlessWidget(); break;
+							case "Endless": parameter.Widget = new NumberboxWidget(); break;
 						}
 					}
-					else if (dimensions == 2)
-					{
-						var def = new Vector2f32Definition();
-						//TODO: parse 2d subtype when pin.Subtype supports it
-						//var comps = subtype[2].Split(',');
-						//FLogger.Log(LogType.Debug, subtype[2]);
-						def.Default = new V2(RCP.Helpers.ParseFloat(subtype[2]));
-						def.Minimum = new V2(RCP.Helpers.ParseFloat(subtype[3]));
-						def.Maximum = new V2(RCP.Helpers.ParseFloat(subtype[4]));
-						def.MultipleOf = new V2(RCP.Helpers.ParseFloat(subtype[5]));
-							
-						parameter = GetNumberParameter<V2>(id, sliceCount, 2, def, pin, (p,i) => RCP.Helpers.GetVector2(p,i));
-					}
-					else if (dimensions == 3)
-					{
-						var def = new Vector3f32Definition();
-						//TODO: parse 3d subtype when pin.Subtype supports it
-						//var comps = subtype[2].Split(',');
-						//FLogger.Log(LogType.Debug, subtype[2]);
-						def.Default = new V3(RCP.Helpers.ParseFloat(subtype[2]));
-						def.Minimum = new V3(RCP.Helpers.ParseFloat(subtype[3]));
-						def.Maximum = new V3(RCP.Helpers.ParseFloat(subtype[4]));
-						def.MultipleOf = new V3(RCP.Helpers.ParseFloat(subtype[5]));
-							
-						parameter = GetNumberParameter<V3>(id, sliceCount, 3, def, pin, (p,i) => RCP.Helpers.GetVector3(p,i));
-					}
-					else if (dimensions == 4)
-					{
-						
-					}
+//					else if (dimensions == 2)
+//					{
+//						var def = new Vector2f32Definition();
+//						//TODO: parse 2d subtype when pin.Subtype supports it
+//						//var comps = subtype[2].Split(',');
+//						//FLogger.Log(LogType.Debug, subtype[2]);
+//						def.Default = new V2(RCP.Helpers.ParseFloat(subtype[2]));
+//						def.Minimum = new V2(RCP.Helpers.ParseFloat(subtype[3]));
+//						def.Maximum = new V2(RCP.Helpers.ParseFloat(subtype[4]));
+//						def.MultipleOf = new V2(RCP.Helpers.ParseFloat(subtype[5]));
+//							
+//						parameter = GetNumberParameter<V2>(id, sliceCount, 2, def, pin, (p,i) => RCP.Helpers.GetVector2(p,i));
+//					}
+//					else if (dimensions == 3)
+//					{
+//						var def = new Vector3f32Definition();
+//						//TODO: parse 3d subtype when pin.Subtype supports it
+//						//var comps = subtype[2].Split(',');
+//						//FLogger.Log(LogType.Debug, subtype[2]);
+//						def.Default = new V3(RCP.Helpers.ParseFloat(subtype[2]));
+//						def.Minimum = new V3(RCP.Helpers.ParseFloat(subtype[3]));
+//						def.Maximum = new V3(RCP.Helpers.ParseFloat(subtype[4]));
+//						def.MultipleOf = new V3(RCP.Helpers.ParseFloat(subtype[5]));
+//							
+//						parameter = GetNumberParameter<V3>(id, sliceCount, 3, def, pin, (p,i) => RCP.Helpers.GetVector3(p,i));
+//					}
+//					else if (dimensions == 4)
+//					{
+//						
+//					}
 					break;
 				}
 				
-				case "String": 
-				{
-					var schema = subtype[0].ToLower();
-					if (schema == "filename" || schema == "directory")
-					{
-						var def = new UriDefinition();
-						def.Default = subtype[1];
-						def.Schema = "file";
-						if (schema == "filename")
-							def.Filter = subtype[2];
-						
-						if (sliceCount > 1)
-						{
-							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
-							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
-							var values = new List<string>();
-							for (int i=0; i<sliceCount; i++)
-								values.Add(pin[i]);
-							param.Value = values; 
-							parameter = param;
-						}
-						else
-						{
-							var param = new UriParameter(id, def as IUriDefinition);
-							
-							var v = pin[0].TrimEnd('\\').Replace("\\", "/");
-							if (schema == "directory")
-								v += "/";
-								
-							param.Value = v;
-							parameter = param;
-						}
-					}
-					else if (schema == "url")
-					{
-						var def = new UriDefinition();
-						def.Default = subtype[1];
-						def.Schema = "http://";
-						
-						if (sliceCount > 1)
-						{
-							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
-							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
-							var values = new List<string>();
-							for (int i=0; i<sliceCount; i++)
-								values.Add(pin[i]);
-							param.Value = values; 
-							parameter = param;
-						}
-						else
-						{
-							var param = new UriParameter(id, def as IUriDefinition);
-							param.Value = pin[0];
-							parameter = param;
-						}
-					}
-					else 
-					{
-						var def = new StringDefinition();
-						def.Default = subtype[1];
-						
-						if (sliceCount > 1)
-						{
-							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
-							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
-							var values = new List<string>();
-							for (int i=0; i<sliceCount; i++)
-								values.Add(pin[i]);
-							param.Value = values; 
-							parameter = param;
-						}
-						else
-						{
-							var param = new StringParameter(id, def as IStringDefinition); 
-							param.Value = pin[0];
-							parameter = param;
-						}
-					}
-					
-					break;
-				}
-				
-				case "Color":
-	            {
-		            /// colors: guiType, default, hasAlpha
-	                bool hasAlpha = subtype[2].Trim() == "HasAlpha";
-	                var def = new RGBADefinition();
-	            	def.Default = Color.Red;
-	
-	                if (sliceCount > 1)
-					{
-						var adef = new ArrayDefinition<Color>(def, (uint)sliceCount);
-						var param = (ArrayParameter<Color>)ParameterFactory.CreateArrayParameter<Color>(id, adef); 
-						var values = new List<Color>();
-						for (int i=0; i<sliceCount; i++)
-							values.Add(RCP.Helpers.ParseColor(pin[i]));
-						param.Value = values; 
-						parameter = param;
-					}
-					else
-					{
-						var param = new RGBAParameter(id, def as IRGBADefinition); 
-						param.Value = RCP.Helpers.ParseColor(pin[0]);
-						parameter = param;
-					} 
-	            	
-	            	break;
-	            }
-	            
-				case "Enumeration":
-	            {
-		            /// enums: guiType, enumName, default
-	                var enumName = subtype[1].Trim();
-	            	var deflt = subtype[2].Trim();
-	            	var def = GetEnumDefinition(enumName, deflt);
-	            	var entries = def.Entries.ToList();
-	            	
-	            	if (sliceCount > 1)
-					{
-						var adef = new ArrayDefinition<ushort>(def, (uint)sliceCount);
-						var param = (ArrayParameter<ushort>)ParameterFactory.CreateArrayParameter<ushort>(id, adef); 
-						var values = new List<ushort>();
-						for (int i=0; i<sliceCount; i++)
-							values.Add((ushort)entries.IndexOf(pin[i]));
-						param.Value = values; 
-						parameter = param;
-					}
-					else
-					{
-						var param = new EnumParameter(id, def as IEnumDefinition); 
-						param.Value = (ushort)entries.IndexOf(pin[0]);
-						parameter = param;
-					}
-	            	
-	            	break;
-	            }
+//				case "String": 
+//				{
+//					var schema = subtype[0].ToLower();
+//					if (schema == "filename" || schema == "directory")
+//					{
+//						var def = new UriDefinition();
+//						def.Default = subtype[1];
+//						def.Schema = "file";
+//						if (schema == "filename")
+//							def.Filter = subtype[2];
+//						
+//						if (sliceCount > 1)
+//						{
+//							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
+//							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
+//							var values = new List<string>();
+//							for (int i=0; i<sliceCount; i++)
+//								values.Add(pin[i]);
+//							param.Value = values; 
+//							parameter = param;
+//						}
+//						else
+//						{
+//							var param = new UriParameter(id, def as IUriDefinition);
+//							
+//							var v = pin[0].TrimEnd('\\').Replace("\\", "/");
+//							if (schema == "directory")
+//								v += "/";
+//								
+//							param.Value = v;
+//							parameter = param;
+//						}
+//					}
+//					else if (schema == "url")
+//					{
+//						var def = new UriDefinition();
+//						def.Default = subtype[1];
+//						def.Schema = "http://";
+//						
+//						if (sliceCount > 1)
+//						{
+//							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
+//							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
+//							var values = new List<string>();
+//							for (int i=0; i<sliceCount; i++)
+//								values.Add(pin[i]);
+//							param.Value = values; 
+//							parameter = param;
+//						}
+//						else
+//						{
+//							var param = new UriParameter(id, def as IUriDefinition);
+//							param.Value = pin[0];
+//							parameter = param;
+//						}
+//					}
+//					else 
+//					{
+//						var def = new StringDefinition();
+//						def.Default = subtype[1];
+//						
+//						if (sliceCount > 1)
+//						{
+//							var adef = new ArrayDefinition<string>(def, (uint)sliceCount);
+//							var param = (ArrayParameter<string>)ParameterFactory.CreateArrayParameter<string>(id, adef); 
+//							var values = new List<string>();
+//							for (int i=0; i<sliceCount; i++)
+//								values.Add(pin[i]);
+//							param.Value = values; 
+//							parameter = param;
+//						}
+//						else
+//						{
+//							var param = new StringParameter(id, def as IStringDefinition); 
+//							param.Value = pin[0];
+//							parameter = param;
+//						}
+//					}
+//					
+//					break;
+//				}
+//				
+//				case "Color":
+//	            {
+//		            /// colors: guiType, default, hasAlpha
+//	                bool hasAlpha = subtype[2].Trim() == "HasAlpha";
+//	                var def = new RGBADefinition();
+//	            	def.Default = Color.Red;
+//	
+//	                if (sliceCount > 1)
+//					{
+//						var adef = new ArrayDefinition<Color>(def, (uint)sliceCount);
+//						var param = (ArrayParameter<Color>)ParameterFactory.CreateArrayParameter<Color>(id, adef); 
+//						var values = new List<Color>();
+//						for (int i=0; i<sliceCount; i++)
+//							values.Add(RCP.Helpers.ParseColor(pin[i]));
+//						param.Value = values; 
+//						parameter = param;
+//					}
+//					else
+//					{
+//						var param = new RGBAParameter(id, def as IRGBADefinition); 
+//						param.Value = RCP.Helpers.ParseColor(pin[0]);
+//						parameter = param;
+//					} 
+//	            	
+//	            	break;
+//	            }
+//	            
+//				case "Enumeration":
+//	            {
+//		            /// enums: guiType, enumName, default
+//	                var enumName = subtype[1].Trim();
+//	            	var deflt = subtype[2].Trim();
+//	            	var def = GetEnumDefinition(enumName, deflt);
+//	            	var entries = def.Entries.ToList();
+//	            	
+//	            	if (sliceCount > 1)
+//					{
+//						var adef = new ArrayDefinition<ushort>(def, (uint)sliceCount);
+//						var param = (ArrayParameter<ushort>)ParameterFactory.CreateArrayParameter<ushort>(id, adef); 
+//						var values = new List<ushort>();
+//						for (int i=0; i<sliceCount; i++)
+//							values.Add((ushort)entries.IndexOf(pin[i]));
+//						param.Value = values; 
+//						parameter = param;
+//					}
+//					else
+//					{
+//						var param = new EnumParameter(id, def as IEnumDefinition); 
+//						param.Value = (ushort)entries.IndexOf(pin[0]);
+//						parameter = param;
+//					}
+//	            	
+//	            	break;
+//	            }
 			}
 			
 			//no suitable parameter found?
 			if (parameter == null)
 			{
-				parameter = new StringParameter(id);
-				parameter.Label = "Unknown Value";
+				parameter = FRCPServer.CreateStringParameter("Unknown Type");
+				parameter.Description = label;
 			}
-			else
-				parameter.Label = pin.ParentNode.LabelPin.Spread.Trim('|');
 			
 			//parent
-			parameter.Parent = GroupMap.GetName(parentId).ToRCPId();
+			//parameter.Parent = GroupMap.GetName(parentId).ToRCPId();
 			
 			//FLogger.Log(LogType.Debug, address + " - " + ParentMap.GetName(address));
 			
 			//order
 			var bounds = node.GetBounds(BoundsType.Box);
 			parameter.Order = bounds.X;
+			
+			//userid
+			parameter.UserId = userId;
 			
 			//userdata
 			var tag = node.FindPin("Tag");
@@ -505,6 +533,17 @@ namespace VVVV.Nodes
 			return parameter;
 		}
 		
+		private void FloatUpdated(object sender, float e)
+        {
+        	IPin2 pin;
+        	if (FCachedPins.TryGetValue((sender as IParameter).UserId, out pin))
+				pin.Spread = RCP.Helpers.Float32ToString(e);
+        	
+//            lock(FParameterQueue)
+//				FParameterQueue.Add(sender as IParameter);
+        }
+		
+		
 		private EnumDefinition GetEnumDefinition(string enumName, string deflt)
 		{
 			var entryCount = EnumManager.GetEnumEntryCount(enumName);
@@ -513,7 +552,7 @@ namespace VVVV.Nodes
                 entries.Add(EnumManager.GetEnumEntryString(enumName, i));
 
             var def = new EnumDefinition();
-            def.Default = (ushort) entries.IndexOf(deflt);
+            def.Default = deflt; //(ushort) entries.IndexOf(deflt);
         	def.Entries = entries.ToArray();
 			
 			return def;
@@ -534,69 +573,67 @@ namespace VVVV.Nodes
 				FParameters.Remove(address);
 		}
 		
-		private IParameter GetParameter<T>(byte[] id, int sliceCount, int dimensions, ITypeDefinition typeDefinition, IPin2 pin, Func<IPin2, int, T> parse) where T: struct
-		{
-			if (sliceCount > 1)
-			{
-				var adef = new ArrayDefinition<T>(typeDefinition, (uint)sliceCount);
-				var param = (ArrayParameter<T>)ParameterFactory.CreateArrayParameter<T>(id, adef); 
-				var values = new List<T>();
-				for (int i=0; i<sliceCount; i+=dimensions)
-					values.Add(parse(pin, i));
-				param.Value = values; 
-				return param;
-			}
-			else
-			{
-				var param = (ValueParameter<T>)ParameterFactory.CreateParameter(id, typeDefinition);
-				param.Value = parse(pin, 0);
-				return param;
-			}
-		}
-		
-		private IParameter GetNumberParameter<T>(byte[] id, int sliceCount, int dimensions, ITypeDefinition typeDefinition, IPin2 pin, Func<IPin2, int, T> parse) where T: struct
-		{
-			if (sliceCount > 1)
-			{
-				var adef = new ArrayDefinition<T>(typeDefinition, (uint)sliceCount);
-				var param = (ArrayParameter<T>)ParameterFactory.CreateArrayParameter<T>(id, adef); 
-				var values = new List<T>();
-				for (int i=0; i<sliceCount; i++)
-				{
-					//FLogger.Log(LogType.Debug, pin[i*dimensions]);
-					values.Add(parse(pin, i*dimensions));
-				}
-					
-				param.Value = values; 
-				
-				return param;
-			}
-			else
-			{
-				var param = (NumberParameter<T>)ParameterFactory.CreateParameter(id, typeDefinition);
-				param.Value = parse(pin, 0);
-				return param;
-			}
-		}
+//		private IParameter GetParameter<T>(byte[] id, int sliceCount, int dimensions, ITypeDefinition typeDefinition, IPin2 pin, Func<IPin2, int, T> parse) where T: struct
+//		{
+//			if (sliceCount > 1)
+//			{
+//				var adef = new ArrayDefinition<T>(typeDefinition, (uint)sliceCount);
+//				var param = (ArrayParameter<T>)ParameterFactory.CreateArrayParameter<T>(id, adef); 
+//				var values = new List<T>();
+//				for (int i=0; i<sliceCount; i+=dimensions)
+//					values.Add(parse(pin, i));
+//				param.Value = values; 
+//				return param;
+//			}
+//			else
+//			{
+//				var param = (ValueParameter<T>)ParameterFactory.CreateParameter(id, typeDefinition);
+//				param.Value = parse(pin, 0);
+//				return param;
+//			}
+//		}
+//		
+//		private IParameter GetNumberParameter<T>(byte[] id, int sliceCount, int dimensions, ITypeDefinition typeDefinition, IPin2 pin, Func<IPin2, int, T> parse) where T: struct
+//		{
+//			if (sliceCount > 1)
+//			{
+//				var adef = new ArrayDefinition<T>(typeDefinition, (uint)sliceCount);
+//				var param = (ArrayParameter<T>)ParameterFactory.CreateArrayParameter<T>(id, adef); 
+//				var values = new List<T>();
+//				for (int i=0; i<sliceCount; i++)
+//				{
+//					//FLogger.Log(LogType.Debug, pin[i*dimensions]);
+//					values.Add(parse(pin, i*dimensions));
+//				}
+//					
+//				param.Value = values; 
+//				
+//				return param;
+//			}
+//			else
+//			{
+//				var param = (NumberParameter<T>)ParameterFactory.CreateParameter(id, typeDefinition);
+//				param.Value = parse(pin, 0);
+//				return param;
+//			}
+//		}
 		
 		private void LabelChanged(object sender, EventArgs e)
 		{
 			var labelPin = sender as IPin2;
-			var id = IdFromPin(labelPin);
+			var userId = IdFromPin(labelPin);
 			
-			var param = FRCPServer.GetParameter(id.ToRCPId());
-			param.Label = labelPin.Spread.Trim('|');
-			FRCPServer.UpdateParameter(param);
+			FCachedParams[userId].Label = labelPin.Spread.Trim('|');
+			FRCPServer.Update();
 		}
 		
 		private void TagChanged(object sender, EventArgs e)
 		{
 			var tagPin = sender as IPin2;
-			var id = IdFromPin(tagPin);
+			var userId = IdFromPin(tagPin);
 			
-			var param = FRCPServer.GetParameter(id.ToRCPId());
-			param.Userdata = Encoding.UTF8.GetBytes(tagPin.Spread.Trim('|'));
-			FRCPServer.UpdateParameter(param);
+			FCachedParams[userId].Userdata = Encoding.UTF8.GetBytes(tagPin.Spread.Trim('|'));
+			FRCPServer.Update();
 		}
 		
 		//the application updated a value
@@ -606,9 +643,10 @@ namespace VVVV.Nodes
 			//beginframe/endframe bracket to not send every changed pin directly
 			//but collect them and send them per frame in a bundle
 			var pin = sender as IPin2;
-			var id = IdFromPin(pin);
+			var userId = IdFromPin(pin);
 			
-			var param = FRCPServer.GetParameter(id.ToRCPId());
+			FLogger.Log(LogType.Debug, "id: " + userId);
+			var param = FCachedParams[userId];
 			//in case of enum pin we also update the full definition here
 			//which may have changed in the meantime
 			//TODO: subscribe to enum-changes on the host and update all related
@@ -624,9 +662,10 @@ namespace VVVV.Nodes
 				paramDef.Entries = newDef.Entries;
 				//FLogger.Log(LogType.Debug, "count: " + pin.Spread);
 			}
-			param = RCP.Helpers.StringToValue(param, pin.Spread);
+			FLogger.Log(LogType.Debug, "count: " + pin.Spread);
+			RCP.Helpers.StringToValue(param, pin.Spread);
 			
-			FRCPServer.UpdateParameter(param);
+			FRCPServer.Update();
 			
 			//OutputBytes(param);
 		}
@@ -645,7 +684,7 @@ namespace VVVV.Nodes
 		private void ParameterUpdated(IParameter parameter)
 		{
 			lock(FParameterQueue)
-			FParameterQueue.Add(parameter);
+				FParameterQueue.Add(parameter);
 		}
 	}
 }
@@ -669,64 +708,65 @@ namespace RCP
 			return input;
 		}
 		
-		public static string ValueToString(dynamic param)
+		public static string ValueToString(IParameter param)
 		{
 			try
 			{
-				switch ((RcpTypes.Datatype)param.TypeDefinition.Datatype)
+				switch (param.TypeDefinition.Datatype)
 				{
-					case RcpTypes.Datatype.Boolean: return RCP.Helpers.BoolToString(param.Value);
-					case RcpTypes.Datatype.String: return PipeEscape(param.Value.ToString());
-					case RcpTypes.Datatype.Enum: return PipeEscape(RCP.Helpers.EnumToString(param.Value, ((IEnumDefinition)param.TypeDefinition).Entries));
-					case RcpTypes.Datatype.Float32: return RCP.Helpers.Float32ToString(param.Value);
-					case RcpTypes.Datatype.Vector2f32: return RCP.Helpers.Vector2f32ToString(param.Value);
-					case RcpTypes.Datatype.Vector3f32: return RCP.Helpers.Vector3f32ToString(param.Value);
-					case RcpTypes.Datatype.Rgba: return RCP.Helpers.ColorToString(param.Value);
-					case RcpTypes.Datatype.FixedArray:
-					{
-						switch ((RcpTypes.Datatype)param.TypeDefinition.Subtype.Datatype)
-						{
-							case RcpTypes.Datatype.Boolean:
-							{
-								var val = ((ArrayParameter<bool>)param).Value;
-								return string.Join(",", val.Select(v => BoolToString(v)));
-							}
-							case RcpTypes.Datatype.Enum:
-							{
-								//TODO; accessing the subtypes entries fails
-								var val = ((ArrayParameter<ushort>)param).Value;
-								return string.Join(",", val.Select(v => PipeEscape(EnumToString(v, ((IEnumDefinition)((ArrayDefinition<ushort>)param.TypeDefinition).Subtype).Entries))));
-							}						
-							case RcpTypes.Datatype.Int32:
-							{
-								var val = ((ArrayParameter<int>)param).Value;
-								return string.Join(",", val.Select(v => Int32ToString(v)));
-							}
-							case RcpTypes.Datatype.Float32:
-							{
-								var val = ((ArrayParameter<float>)param).Value;
-								return string.Join(",", val.Select(v => Float32ToString(v)));
-							}
-							case RcpTypes.Datatype.Vector2f32:
-							{
-								var val = ((ArrayParameter<V2>)param).Value;
-								return string.Join(",", val.Select(v => Vector2f32ToString(v)));
-							}						
-							case RcpTypes.Datatype.String:
-							{
-								var val = ((ArrayParameter<string>)param).Value;
-								return string.Join(",", val.Select(v => PipeEscape(v)));
-							}
-							case RcpTypes.Datatype.Rgba:
-							{
-								var val = ((ArrayParameter<Color>)param).Value;
-								return string.Join(",", val.Select(v => ColorToString(v)));
-							}
-							
-							default: return param.Value.ToString();
-						}
-					}
-					default: return param.Value.ToString();
+					case RcpTypes.Datatype.Boolean: return RCP.Helpers.BoolToString((param as IBooleanParameter).Value);
+					case RcpTypes.Datatype.String: return PipeEscape((param as IStringParameter).Value);
+					case RcpTypes.Datatype.Enum: return PipeEscape((param as IEnumParameter).Value);
+					case RcpTypes.Datatype.Float32: return RCP.Helpers.Float32ToString((param as INumberParameter<float>).Value);
+					case RcpTypes.Datatype.Int32: return RCP.Helpers.Int32ToString((param as INumberParameter<int>).Value);
+					case RcpTypes.Datatype.Vector2f32: return RCP.Helpers.Vector2f32ToString((param as INumberParameter<Vector2>).Value);
+					case RcpTypes.Datatype.Vector3f32: return RCP.Helpers.Vector3f32ToString((param as INumberParameter<Vector3>).Value);
+					case RcpTypes.Datatype.Rgba: return RCP.Helpers.ColorToString((param as IRGBAParameter).Value);
+//					case RcpTypes.Datatype.Array:
+//					{
+//						switch ((RcpTypes.Datatype)param.TypeDefinition.Subtype.Datatype)
+//						{
+//							case RcpTypes.Datatype.Boolean:
+//							{
+//								var val = ((ArrayParameter<bool>)param).Value;
+//								return string.Join(",", val.Select(v => BoolToString(v)));
+//							}
+//							case RcpTypes.Datatype.Enum:
+//							{
+//								//TODO; accessing the subtypes entries fails
+//								var val = ((ArrayParameter<ushort>)param).Value;
+//								return string.Join(",", val.Select(v => PipeEscape(EnumToString(v, ((IEnumDefinition)((ArrayDefinition<ushort>)param.TypeDefinition).Subtype).Entries))));
+//							}						
+//							case RcpTypes.Datatype.Int32:
+//							{
+//								var val = ((ArrayParameter<int>)param).Value;
+//								return string.Join(",", val.Select(v => Int32ToString(v)));
+//							}
+//							case RcpTypes.Datatype.Float32:
+//							{
+//								var val = ((ArrayParameter<float>)param).Value;
+//								return string.Join(",", val.Select(v => Float32ToString(v)));
+//							}
+//							case RcpTypes.Datatype.Vector2f32:
+//							{
+//								var val = ((ArrayParameter<V2>)param).Value;
+//								return string.Join(",", val.Select(v => Vector2f32ToString(v)));
+//							}						
+//							case RcpTypes.Datatype.String:
+//							{
+//								var val = ((ArrayParameter<string>)param).Value;
+//								return string.Join(",", val.Select(v => PipeEscape(v)));
+//							}
+//							case RcpTypes.Datatype.Rgba:
+//							{
+//								var val = ((ArrayParameter<Color>)param).Value;
+//								return string.Join(",", val.Select(v => ColorToString(v)));
+//							}
+//							
+//							default: return param.Value.ToString();
+//						}
+//					}
+					default: return "null";
 				}
 			}
 			catch (Exception e)
@@ -746,141 +786,141 @@ namespace RCP
 		}
 		
 		//sets the value given as string on the given parameter
-		public static IParameter StringToValue(dynamic param, string input)
+		public static IParameter StringToValue(IParameter param, string input)
 		{
-			try
+			//try
 			{
-				switch((RcpTypes.Datatype)param.TypeDefinition.Datatype)
+				switch(param.TypeDefinition.Datatype)
 				{
 					case RcpTypes.Datatype.Boolean:
 					{
-						var p = (BooleanParameter)param;
+						var p = (IBooleanParameter)param;
 						p.Value = ParseBool(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.Enum:
 					{
-						var p = (EnumParameter)param;
-						p.Value = ParseEnum(PipeUnEscape(input), ((IEnumDefinition)param.TypeDefinition).Entries);
+						var p = (IEnumParameter)param;
+						p.Value = PipeUnEscape(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.Int32:
 					{
-						var p = (NumberParameter<int>)param;
+						var p = (INumberParameter<int>)param;
 						p.Value = ParseInt(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.Float32:
 					{
-						var p = (NumberParameter<float>)param;
+						var p = (INumberParameter<float>)param;
 						p.Value = ParseFloat(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.String:
 					{
-						var p = (StringParameter)param;
+						var p = (IStringParameter)param;
 						p.Value = PipeUnEscape(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.Rgba:
 					{
-						var p = (RGBAParameter)param;
+						var p = (IRGBAParameter)param;
 						p.Value = ParseColor(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.Vector2f32:
 					{
-						var p = (NumberParameter<V2>)param;
+						var p = (INumberParameter<V2>)param;
 						p.Value = ParseVector2(input);
 						return p;
 					}
 					
 					case RcpTypes.Datatype.Vector3f32:
 					{
-						var p = (NumberParameter<V3>)param;
+						var p = (INumberParameter<V3>)param;
 						p.Value = ParseVector3(input);
 						return p;
 					}
 					
-					case RcpTypes.Datatype.FixedArray:
-					{
-						//TODO; handle array types properly
-						switch ((RcpTypes.Datatype)param.TypeDefinition.Subtype.Datatype)
-						{
-							case RcpTypes.Datatype.Boolean:
-							{
-								var p = (ArrayParameter<bool>)param;
-								p.Value = input.Split(',').Select(s => ParseBool(s)).ToList();
-								return p;
-							}
-							
-							case RcpTypes.Datatype.Enum:
-							{
-								var p = (ArrayParameter<ushort>)param;
-								p.Value = SplitToSlices(input).Select(s => ParseEnum(PipeUnEscape(s), ((IEnumDefinition)param.TypeDefinition).Entries)).ToList();
-								return p;
-							}
-							
-							case RcpTypes.Datatype.Int32:
-							{
-								var p = (ArrayParameter<int>)param;
-								p.Value = input.Split(',').Select(s => ParseInt(s)).ToList();
-								return p;
-							}
-							
-							case RcpTypes.Datatype.String:
-							{
-								var p = (ArrayParameter<string>)param;
-								p.Value = SplitToSlices(input).Select(s => PipeUnEscape(s)).ToList();
-								return p;
-							}
-							
-							case RcpTypes.Datatype.Float32:
-							{
-								var p = (ArrayParameter<float>)param;
-								p.Value = input.Split(',').Select(s => ParseFloat(s)).ToList();
-								return p;
-							}
-							
-							case RcpTypes.Datatype.Vector2f32:
-							{
-								var p = (ArrayParameter<V2>)param;
-								var v = input.Split(',');
-								p.Value.Clear();
-								for (int i=0; i<v.Count()/2; i++)
-									p.Value.Add(new V2(ParseFloat(v[i*2]), ParseFloat(v[i*2+1])));
-								return p;
-							}
-							
-							case RcpTypes.Datatype.Vector3f32:
-							{
-								var p = (ArrayParameter<V3>)param;
-								var v = input.Split(',');
-								p.Value.Clear();
-								for (int i=0; i<v.Count()/3; i++)
-									p.Value.Add(new V3(ParseFloat(v[i*3]), ParseFloat(v[i*3+1]), ParseFloat(v[i*3+2])));
-								return p;
-							}
-							
-							case RcpTypes.Datatype.Rgba:
-							{
-								var p = (ArrayParameter<Color>)param;
-								//split at commas outside of pipes
-								p.Value = SplitToSlices(input).Select(s => ParseColor(s)).ToList();
-								return p;
-							}
-						}
-						break;
-					}
+//					case RcpTypes.Datatype.Array:
+//					{
+//						//TODO; handle array types properly
+//						switch ((RcpTypes.Datatype)param.TypeDefinition.Subtype.Datatype)
+//						{
+//							case RcpTypes.Datatype.Boolean:
+//							{
+//								var p = (ArrayParameter<bool>)param;
+//								p.Value = input.Split(',').Select(s => ParseBool(s)).ToList();
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.Enum:
+//							{
+//								var p = (ArrayParameter<ushort>)param;
+//								p.Value = SplitToSlices(input).Select(s => ParseEnum(PipeUnEscape(s), ((IEnumDefinition)param.TypeDefinition).Entries)).ToList();
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.Int32:
+//							{
+//								var p = (ArrayParameter<int>)param;
+//								p.Value = input.Split(',').Select(s => ParseInt(s)).ToList();
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.String:
+//							{
+//								var p = (ArrayParameter<string>)param;
+//								p.Value = SplitToSlices(input).Select(s => PipeUnEscape(s)).ToList();
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.Float32:
+//							{
+//								var p = (ArrayParameter<float>)param;
+//								p.Value = input.Split(',').Select(s => ParseFloat(s)).ToList();
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.Vector2f32:
+//							{
+//								var p = (ArrayParameter<V2>)param;
+//								var v = input.Split(',');
+//								p.Value.Clear();
+//								for (int i=0; i<v.Count()/2; i++)
+//									p.Value.Add(new V2(ParseFloat(v[i*2]), ParseFloat(v[i*2+1])));
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.Vector3f32:
+//							{
+//								var p = (ArrayParameter<V3>)param;
+//								var v = input.Split(',');
+//								p.Value.Clear();
+//								for (int i=0; i<v.Count()/3; i++)
+//									p.Value.Add(new V3(ParseFloat(v[i*3]), ParseFloat(v[i*3+1]), ParseFloat(v[i*3+2])));
+//								return p;
+//							}
+//							
+//							case RcpTypes.Datatype.Rgba:
+//							{
+//								var p = (ArrayParameter<Color>)param;
+//								//split at commas outside of pipes
+//								p.Value = SplitToSlices(input).Select(s => ParseColor(s)).ToList();
+//								return p;
+//							}
+//						}
+//						break;
+//					}
 				}
 			}
-			catch
+			//catch
 			{
 				//string parsing went wrong...						
 			}
@@ -1017,14 +1057,14 @@ namespace RCP
 				{
 					case RcpTypes.Datatype.Boolean:
 					{
-						var def = (IBooleanDefinition)definition;
+						var def = (IBoolDefinition)definition;
 						return def.Default ? "1" : "0";
 					}
 					
 					case RcpTypes.Datatype.Enum:
 					{
 						var def = (IEnumDefinition)definition;
-						return EnumToString(def.Default, ((IEnumDefinition)def).Entries) + ", [" + string.Join(",", def.Entries) + "]";
+						return def.Default; //, ((IEnumDefinition)def).Entries) + ", [" + string.Join(",", def.Entries) + "]";
 					}
 					
 					case RcpTypes.Datatype.Int32:
@@ -1069,12 +1109,12 @@ namespace RCP
 						return ColorToString(def.Default);
 					}
 					
-					case RcpTypes.Datatype.FixedArray:
+					case RcpTypes.Datatype.Array:
 					{
 						dynamic def = definition;
 						switch((RcpTypes.Datatype)def.Subtype.Datatype)
 						{
-							case RcpTypes.Datatype.Boolean: return TypeDefinitionToString((IBooleanDefinition)def.Subtype);
+							case RcpTypes.Datatype.Boolean: return TypeDefinitionToString((IBoolDefinition)def.Subtype);
 							case RcpTypes.Datatype.Float32: return TypeDefinitionToString((INumberDefinition<float>)def.Subtype);
 							
 							default: return "Unknown Type";

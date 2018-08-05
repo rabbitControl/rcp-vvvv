@@ -60,7 +60,7 @@ namespace VVVV.Nodes
 		
 		RCPClient FRCPClient;
 		WebsocketClientTransporter FTransporter;
-		HashSet<byte[]> FParamIds = new HashSet<byte[]>(new StructuralEqualityComparer<byte[]>());
+		HashSet<short> FParamIds = new HashSet<short>();
 		#endregion fields & pins
 		
 		public RCPStickNode()
@@ -68,7 +68,6 @@ namespace VVVV.Nodes
 			FRCPClient = new RCPClient();
 			
 			FRCPClient.ParameterAdded = ParameterAdded;
-			FRCPClient.ParameterUpdated = ParameterUpdated; 
 			FRCPClient.ParameterRemoved = ParameterRemoved;
 		}
 		
@@ -89,20 +88,17 @@ namespace VVVV.Nodes
 		
 		private void ParameterAdded(IParameter parameter)
 		{
+			parameter.Updated += ParameterUpdated;
+//			dynamic p = (dynamic) parameter;
+//			FLogger.Log(LogType.Debug, "fo: " + p.UserId);
 			FParamIds.Add(parameter.Id);
 			UpdateOutputs();			
 		}
 		
-		private void ParameterUpdated(IParameter parameter)
+		private void ParameterRemoved(IParameter parameter)
 		{
+			parameter.Updated -= ParameterUpdated;
 			FParamIds.Remove(parameter.Id);
-			FParamIds.Add(parameter.Id);
-			UpdateOutput(parameter.Id);
-		}
-		
-		private void ParameterRemoved(byte[] id)
-		{
-			FParamIds.Remove(id);
 			UpdateOutputs();
 		}
 
@@ -133,7 +129,7 @@ namespace VVVV.Nodes
 		
 		private void Initialize()
 		{
-			FParamIds.Clear();
+//			FParamIds.Clear();
 			FRCPClient.Initialize();
 		}
 		
@@ -142,36 +138,31 @@ namespace VVVV.Nodes
 			var parameters = FParamIds.Select(id => FRCPClient.GetParameter(id)).OrderBy(p => p.Order);
 
 			var ps = new List<Parameter>();
-			foreach (dynamic p in parameters)
+			
+			foreach (var p in parameters)
 			{
-				string v = "null";
-				if (p.Value != null)
-					v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
-				
+				//FLogger.Log(LogType.Debug, "fo: " + p.UserId);
+				var v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
 				var datatype = p.TypeDefinition.Datatype.ToString();
 				var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
 				var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
-				var param = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, p.Widget, userdata);
+				var param = new Parameter(p.Id, datatype, typedef, v, p.Label, p.ParentId, p.Widget, userdata);
 				ps.Add(param);
 			}
 			FParameters.AssignFrom(ps);
 		}
 		
-		private void UpdateOutput(byte[] id)
+		private void ParameterUpdated(object sender, EventArgs e)
 		{
-			var p = FRCPClient.GetParameter(id);
+			var p = sender as IParameter;
 
-			string v = "null";
-			dynamic dp = p;
-			if (dp.Value != null)
-				v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(dp));
-			
+			var v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
 			var datatype = p.TypeDefinition.Datatype.ToString();
 			var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
 			var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
 			
 			var orderedParams = FParamIds.Select(pid => FRCPClient.GetParameter(pid)).OrderBy(param => param.Order).ToList();
-			FParameters[orderedParams.IndexOf(p)] = new Parameter(p.Id, datatype, typedef, v, p.Label, p.Parent, p.Widget, userdata);
+			FParameters[orderedParams.IndexOf(p)] = new Parameter(p.Id, datatype, typedef, v, p.Label, p.ParentId, p.Widget, userdata);
 		}
 	}
 	
@@ -210,12 +201,16 @@ namespace VVVV.Nodes
 			for (int i=0; i<SpreadMax; i++)
 				if (FSend[i] && FClientIn[0] != null)
 				{
-					dynamic param = FClientIn[0].GetParameter(FID[i].ToRCPId());
-					if (param != null)
+					short id;
+					if (short.TryParse(FID[i], out id))
 					{
-						var p = RCP.Helpers.StringToValue(param, FValue[i]);
-						p.Userdata = Encoding.UTF8.GetBytes(FUserdata[i]);
-						FClientIn[0].Update(p);
+						var param = FClientIn[0].GetParameter(id);
+						if (param != null)
+						{
+							var p = RCP.Helpers.StringToValue(param, FValue[i]);
+							p.Userdata = Encoding.UTF8.GetBytes(FUserdata[i]);
+							FClientIn[0].Update();
+						}
 					}
 				}
 		}
