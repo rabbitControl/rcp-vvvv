@@ -19,7 +19,8 @@ namespace VVVV.Nodes
 		//address -> unique id
 		static Dictionary<string, string> FMap = new Dictionary<string, string>();
 		
-		public static Action<string> GroupChanged;
+		public static Action<string> GroupAdded;
+		public static Action<string> GroupRemoved;
 		
 		public static string GetName(string address)
 		{
@@ -39,7 +40,7 @@ namespace VVVV.Nodes
 			if (!FMap.ContainsKey(address))
 			{
 				FMap.Add(address, name);
-				GroupChanged?.Invoke(address);
+				GroupAdded?.Invoke(address);
 			}
 		}
 		
@@ -48,7 +49,7 @@ namespace VVVV.Nodes
 			if (FMap.ContainsKey(address))
 			{
 				FMap.Remove(address);
-				GroupChanged?.Invoke(address);
+				GroupRemoved?.Invoke(address);
 			}
 		}
 		
@@ -65,7 +66,7 @@ namespace VVVV.Nodes
 	public class GroupNode : IPluginEvaluate, IDisposable
 	{
 		#region fields & pins
-		[Input("Unique Name", IsSingle = true)]
+		[Input("Label", IsSingle = true)]
 		public IDiffSpread<string> FUID;
 		
 		[Output("Output")]
@@ -82,6 +83,7 @@ namespace VVVV.Nodes
 		{
 			if (FUID.IsChanged)
 			{
+				//TODO: instead of removing/re-adding, simply rename grouplabel
 				RemoveUID();
 				
 				FOutput.SliceCount = 1;
@@ -146,79 +148,4 @@ namespace VVVV.Nodes
 			}	
 		}
 	}
-	
-//	#region PluginInfo
-//	[PluginInfo(Name = "NameToID", Category = "VVVV")]
-//	#endregion PluginInfo
-//	public class NameToIDNode : IPluginEvaluate
-//	{
-//		#region fields & pins
-//		[Input("Input")]
-//		public ISpread<string> FInput;
-//		
-//		[Output("Output")]
-//		public ISpread<string> FOutput;
-//
-//		[Import()]
-//		public IPluginHost FPluginHost;
-//		#endregion fields & pins
-//
-//		//called when data for any output pin is requested
-//		public void Evaluate(int SpreadMax)
-//		{
-//			FOutput.SliceCount = SpreadMax;
-//			
-//			for (int i=0; i<SpreadMax; i++)
-//			{
-//				//incoming pin address with UID name part front
-//				var ids = FInput[i].Split('/'); 
-//				//get the address of the pin's node's parent
-//				var uid = ids[0];
-//				FOutput[i] = ParentMap.GetName(uid) + "/" + string.Join("/", ids.Skip(1));
-//			}
-//				
-//		}
-//	}
-//	
-//	#region PluginInfo
-//	[PluginInfo(Name = "IDToName", Category = "VVVV")]
-//	#endregion PluginInfo
-//	public class IDToNameNode : IPluginEvaluate
-//	{
-//		#region fields & pins
-//		[Input("Input")]
-//		public ISpread<string> FInput;
-//		
-//		[Output("Output")]
-//		public ISpread<string> FOutput;
-//
-//		[Import()]
-//		public IPluginHost FPluginHost;
-//		#endregion fields & pins
-//
-//		//called when data for any output pin is requested
-//		public void Evaluate(int SpreadMax)
-//		{
-//			FOutput.SliceCount = SpreadMax;
-//			
-//			var keys = ParentMap.Map.Keys.ToList();
-//			var values = ParentMap.Map.Values.ToList();
-//			for (int i=0; i<SpreadMax; i++)
-//			{
-//				//incoming full pin address
-//				var ids = FInput[i].Split('/'); 
-//				//get the address of the pin's node's parent
-//				var address = string.Join("/", ids.Take(ids.Length-2));
-//				
-//				try
-//				{
-//					FOutput[i] = FInput[i].Replace(address, keys[values.IndexOf(address)]);
-//				}
-//				catch
-//				{
-//					FOutput[i] = "No name found for ID: " + address;
-//				}
-//			}
-//		}
-//	}
 }

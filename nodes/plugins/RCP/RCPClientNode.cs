@@ -89,8 +89,6 @@ namespace VVVV.Nodes
 		private void ParameterAdded(IParameter parameter)
 		{
 			parameter.Updated += ParameterUpdated;
-//			dynamic p = (dynamic) parameter;
-//			FLogger.Log(LogType.Debug, "fo: " + p.UserId);
 			FParamIds.Add(parameter.Id);
 			UpdateOutputs();			
 		}
@@ -129,40 +127,40 @@ namespace VVVV.Nodes
 		
 		private void Initialize()
 		{
-//			FParamIds.Clear();
+			FParamIds.Clear();
 			FRCPClient.Initialize();
 		}
 		
 		private void UpdateOutputs()
 		{
 			var parameters = FParamIds.Select(id => FRCPClient.GetParameter(id)).OrderBy(p => p.Order);
-
 			var ps = new List<Parameter>();
 			
 			foreach (var p in parameters)
-			{
-				//FLogger.Log(LogType.Debug, "fo: " + p.UserId);
-				var v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
-				var datatype = p.TypeDefinition.Datatype.ToString();
-				var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
-				var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
-				var param = new Parameter(p.Id, datatype, typedef, v, p.Label, p.ParentId, p.Widget, userdata);
-				ps.Add(param);
-			}
+				ps.Add(GetParameter(p));
+			
 			FParameters.AssignFrom(ps);
 		}
 		
 		private void ParameterUpdated(object sender, EventArgs e)
 		{
 			var p = sender as IParameter;
-
+			var orderedParams = FParamIds.Select(pid => FRCPClient.GetParameter(pid)).OrderBy(param => param.Order).ToList();
+			FParameters[orderedParams.IndexOf(p)] = GetParameter(p);
+		}
+		
+		private Parameter GetParameter(IParameter p)
+		{
 			var v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
-			var datatype = p.TypeDefinition.Datatype.ToString();
+			var datatype = RCP.Helpers.DatatypeToString(p.TypeDefinition);
 			var typedef = RCP.Helpers.TypeDefinitionToString(p.TypeDefinition);
 			var userdata = p.Userdata != null ? Encoding.UTF8.GetString(p.Userdata) : "";
 			
-			var orderedParams = FParamIds.Select(pid => FRCPClient.GetParameter(pid)).OrderBy(param => param.Order).ToList();
-			FParameters[orderedParams.IndexOf(p)] = new Parameter(p.Id, datatype, typedef, v, p.Label, p.ParentId, p.Widget, userdata);
+			var grp = "";
+			if (p.ParentId != 0)
+				grp = FRCPClient.GetParameter(p.ParentId)?.Label ?? "invalid group ID: " + p.ParentId;
+			
+			return new Parameter(p.Id, datatype, typedef, v, p.Label, grp, p.Widget, userdata);
 		}
 	}
 	

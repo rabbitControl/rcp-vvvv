@@ -1,6 +1,6 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50beta36.dtd" >
-   <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="0" scrolly="-360">
-   <BOUNDS type="Window" left="11820" top="3360" width="11295" height="9450">
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50debug36.1.dtd" >
+   <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="15" scrolly="135">
+   <BOUNDS type="Window" left="11160" top="0" width="12495" height="9450">
    </BOUNDS>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="3">
    <BOUNDS type="Node" left="225" top="225" width="5100" height="450">
@@ -31,13 +31,13 @@
    </BOUNDS>
    <PIN pinname="Client" visible="1" slicecount="1" values="||">
    </PIN>
-   <PIN pinname="ID" visible="1" slicecount="1" values="|/74/51/Input String|">
+   <PIN pinname="ID" visible="1" slicecount="1" values="||">
    </PIN>
    <PIN pinname="Input" visible="1" slicecount="1" values="||">
    </PIN>
    <PIN pinname="Send" visible="1" slicecount="1" values="0">
    </PIN>
-   <PIN pinname="Value" visible="1" slicecount="1" values="|we,2,3,||4||||4||,5|">
+   <PIN pinname="Value" visible="1" slicecount="1" values="||">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="6">
@@ -269,7 +269,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="1365" top="1440" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10001">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10000">
    </PIN>
    <PIN pinname="Units" slicecount="1" values="||">
    </PIN>
@@ -359,6 +359,10 @@
    </PIN>
    <PIN pinname="Widget" visible="1">
    </PIN>
+   <PIN pinname="Parent" visible="1">
+   </PIN>
+   <PIN pinname="Group" visible="1">
+   </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="30">
    <BOUNDS type="Box" left="1665" top="4485" width="1845" height="1590">
@@ -432,18 +436,6 @@
    </NODE>
    <LINK srcnodeid="28" srcpinname="Label" dstnodeid="33" dstpinname="Input String">
    </LINK>
-   <NODE systemname="ParameterByGroup (RCP)" filename="RCP.csproj" nodename="ParameterByGroup (RCP)" componentmode="Hidden" id="34">
-   <BOUNDS type="Node" left="1665" top="3315" width="100" height="100">
-   </BOUNDS>
-   <BOUNDS type="Box" left="1665" top="3315" width="3000" height="3000">
-   </BOUNDS>
-   <PIN pinname="Input" visible="1" slicecount="1" values="||">
-   </PIN>
-   <PIN pinname="Output" visible="1">
-   </PIN>
-   <PIN pinname="Group" slicecount="1" visible="1" values="||">
-   </PIN>
-   </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="35">
    <BOUNDS type="Node" left="3330" top="3330" width="2505" height="270">
    </BOUNDS>
@@ -492,9 +484,7 @@
    </NODE>
    <LINK srcnodeid="28" srcpinname="Userdata" dstnodeid="37" dstpinname="Input String">
    </LINK>
-   <LINK srcnodeid="34" srcpinname="Output" dstnodeid="28" dstpinname="Input">
-   </LINK>
-   <PACK Name="dx11" Version="1.2">
+   <PACK Name="dx11" Version="1.3.1">
    </PACK>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="38">
    <BOUNDS type="Box" left="9150" top="4470" width="1380" height="1605">
@@ -509,7 +499,7 @@
    </PIN>
    <PIN pinname="Columns" slicecount="1" values="1">
    </PIN>
-   <PIN pinname="Input String" visible="1" slicecount="1" values="default">
+   <PIN pinname="Input String" visible="1" slicecount="4" values="default,default,endless,default">
    </PIN>
    <PIN pinname="Rows" slicecount="1" values="6">
    </PIN>
@@ -521,6 +511,8 @@
    </BOUNDS>
    <BOUNDS type="Box" left="1065" top="2415" width="0" height="0">
    </BOUNDS>
+   <PIN pinname="Parameters" visible="1">
+   </PIN>
    </NODE>
    <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="39" dstpinname="Initialize">
    </LINK>
@@ -532,6 +524,36 @@
    </LINK>
    <LINK srcnodeid="39" srcpinname="Connected" dstnodeid="26" dstpinname="Y Input Value">
    </LINK>
-   <LINK srcnodeid="39" srcpinname="Parameters" dstnodeid="34" dstpinname="Input">
+   <NODE nodename="IOBox (String)" componentmode="InABox" id="40">
+   <BOUNDS type="Box" left="10635" top="4455" width="900" height="1620">
+   </BOUNDS>
+   <BOUNDS type="Node" left="10635" top="4455" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Default" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="File Mask" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Maximum Characters" slicecount="1" values="-1">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="6">
+   </PIN>
+   <PIN pinname="Input String" visible="1" slicecount="4" values=",,mygroup,mygroup">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="28" srcpinname="Group" dstnodeid="40" dstpinname="Input String">
+   </LINK>
+   <NODE systemname="ParameterByGroup (RCP)" filename="RCP.csproj" nodename="ParameterByGroup (RCP)" componentmode="Hidden" id="41">
+   <BOUNDS type="Node" left="1665" top="3315" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1665" top="3315" width="3000" height="3000">
+   </BOUNDS>
+   <PIN pinname="Group" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Input" visible="1" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="41" srcpinname="Output" dstnodeid="28" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="39" srcpinname="Parameters" dstnodeid="41" dstpinname="Input">
    </LINK>
    </PATCH>

@@ -23,19 +23,19 @@ namespace VVVV.Nodes
 {
 	public class Parameter
 	{
-		string FId, FDatatype, FTypeDefinition, FValue, FLabel, FParent, FWidget, FUserdata;
+		string FId, FDatatype, FTypeDefinition, FValue, FLabel, FGroup, FWidget, FUserdata;
 		
 		public Parameter ()
 		{}
 		
-		public Parameter (short id, string datatype, string typeDefinition, string value, string label, short parent, Widget widget, string userdata)
+		public Parameter (short id, string datatype, string typeDefinition, string value, string label, string group, Widget widget, string userdata)
 		{
 			FId = id.ToString();
 			FDatatype = datatype;
 			FTypeDefinition = typeDefinition;
 			FValue = value;
 			FLabel = label;
-			FParent = parent.ToString();
+			FGroup = group;
 			FUserdata = userdata;
 			
 			if (widget is BangWidget)
@@ -57,7 +57,7 @@ namespace VVVV.Nodes
 		public string TypeDefinition => FTypeDefinition;
 		public string Value => FValue;
 		public string Label => FLabel;
-		public string Parent => FParent;	
+		public string Group => FGroup;	
 		public string Widget => FWidget;	
 		public string Userdata => FUserdata;
 	}
@@ -84,12 +84,15 @@ namespace VVVV.Nodes
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			if (string.IsNullOrWhiteSpace(FGroup[0]))
+			if (FParameters[0] == null)
+				FParametersOut.SliceCount = 0;
+			else if (string.IsNullOrWhiteSpace(FGroup[0]))
 				FParametersOut.AssignFrom(FParameters);
 			else
 			{
-				var groups = FGroup.ToList();
-				FParametersOut.AssignFrom(FParameters.Where(p => groups.Contains(p.Parent)));
+				var groups = FParameters.Where(p => p.Datatype == "Group");
+				var groupsToFilter = FGroup.ToList();
+				FParametersOut.AssignFrom(FParameters.Where(p => groupsToFilter.Contains(p.Group)));
 			}
 		}
 	}
@@ -124,8 +127,8 @@ namespace VVVV.Nodes
 //		[Output("Order")]
 //		public ISpread<int> FOrder;
 		
-//		[Output("Parent")]
-//		public ISpread<string> FParent;
+		[Output("Group")]
+		public ISpread<string> FGroup;
 		
 		[Output("Widget")]
 		public ISpread<string> FWidget;
@@ -148,7 +151,7 @@ namespace VVVV.Nodes
 				FValue.AssignFrom(FParameter.Select(p => p.Value));
 				FLabel.AssignFrom(FParameter.Select(p => p.Label));
 				FWidget.AssignFrom(FParameter.Select(p => p.Widget));
-		//			FParent.AssignFrom(FParameter.Select(p => p.Parent?.ToIdString() ?? ""));
+				FGroup.AssignFrom(FParameter.Select(p => p.Group));
 				FUserdata.AssignFrom(FParameter.Select(p => p.Userdata));
 			}
 			catch {}
