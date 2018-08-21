@@ -240,6 +240,7 @@ namespace VVVV.Nodes
 			
 			var parentId = ParentIdFromNode(node);
 			var param = ParameterFromNode(node, userId, parentId);
+			param.Updated += ParameterUpdated;
 			FCachedParams.Add(userId, param);
 			
 			//group
@@ -472,7 +473,7 @@ namespace VVVV.Nodes
 			//userid
 			parameter.UserId = userId;
 			
-			parameter.Updated += ParameterUpdated;
+			
 			
 			//userdata
 			var tag = node.FindPin("Tag");
@@ -707,7 +708,11 @@ namespace VVVV.Nodes
 				var enumName = subtype[1].Trim();
 				var dflt = subtype[2].Trim();
 				var newDef = GetEnumDefinition(enumName, dflt);
-				var paramDef = param.TypeDefinition as EnumDefinition;
+				IEnumDefinition paramDef;
+				if (pin.SliceCount == 1)
+					paramDef = param.TypeDefinition as IEnumDefinition;
+				else
+					paramDef = (param.TypeDefinition as IArrayDefinition).ElementDefinition as IEnumDefinition;
 				paramDef.Default = newDef.Default;
 				paramDef.Entries = newDef.Entries;
 				//FLogger.Log(LogType.Debug, "count: " + pin.Spread);
