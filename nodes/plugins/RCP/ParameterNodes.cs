@@ -84,7 +84,7 @@ namespace VVVV.Nodes
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			if (FParameters[0] == null)
+			if (FParameters.SliceCount == 0 || FParameters[0] == null)
 				FParametersOut.SliceCount = 0;
 			else if (string.IsNullOrWhiteSpace(FGroup[0]))
 				FParametersOut.AssignFrom(FParameters);

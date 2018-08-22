@@ -52,7 +52,7 @@ namespace VVVV.Nodes
 		[Input("Update Enums", IsSingle=true, IsBang=true)]
 		public ISpread<bool> FUpdateEnums; 
 		
-		[Output("Connection Count")]
+		[Output("Client Count")]
 		public ISpread<int> FConnectionCount;
 		//public ISpread<byte> FOutput;
 		
@@ -232,7 +232,6 @@ namespace VVVV.Nodes
 			var tagPin = node.FindPin("Tag");
 			tagPin.Changed += TagChanged;
 			//TODO: subscribe to subtype-pins here as well
-			//tag
 			//default, min, max, ...
 			
 			var userId = IdFromPin(pin);
@@ -538,12 +537,15 @@ namespace VVVV.Nodes
 			else
 			{
 				var param = FRCPServer.CreateBooleanArrayParameter(label, sliceCount);
-				//TODO:set default, min, max
-				
 				var values = new List<bool>();
+				var defs = new List<bool>();
 				for (int i=0; i<sliceCount; i++)
+				{
 					values.Add(parse(pin, i));
+					defs.Add(def);
+				}
 				param.Value = values.ToArray(); 
+				param.Default = defs.ToArray();
 				return param;
 			}
 		}
@@ -563,16 +565,19 @@ namespace VVVV.Nodes
 			else
 			{
 				var param = FRCPServer.CreateNumberArrayParameter<T[], T>(label, sliceCount);
-				
 				var values = new List<T>();
+				var defs = new List<T>();
+				//TODO:set multiple, min, max
+//				var mins = new List<T>();
+//				var maxs = new List<T>();
+//				var mults = new List<T>();
 				for (int i=0; i<sliceCount; i++)
 				{
-					//FLogger.Log(LogType.Debug, pin[i*dimensions]);
-					//TODO:set default, min, max
 					values.Add(parse(pin, i*dimensions));
+					defs.Add(def);					
 				}
-					
 				param.Value = values.ToArray();
+				param.Default = defs.ToArray();
 				return param;
 			}
 		}
@@ -589,11 +594,15 @@ namespace VVVV.Nodes
 			else
 			{
 				var param = FRCPServer.CreateStringArrayParameter(label, sliceCount);
-				//TODO:set default
 				var values = new List<string>();
+				var defs = new List<string>();
 				for (int i=0; i<sliceCount; i++)
+				{
 					values.Add(parse(pin, i));
+					defs.Add(def);
+				}
 				param.Value = values.ToArray(); 
+				param.Default = defs.ToArray();
 				return param;
 			}
 		}
@@ -612,13 +621,16 @@ namespace VVVV.Nodes
 			else
 			{
 				var param = FRCPServer.CreateUriArrayParameter(label, sliceCount);
-				//TODO:set default
-//				param.Schema = schema;
-//				param.Filter = filter;
+				//TODO:set schema, filter
 				var values = new List<string>();
+				var defs = new List<string>();
 				for (int i=0; i<sliceCount; i++)
+				{
 					values.Add(parse(pin, i));
-				param.Value = values.ToArray(); 
+					defs.Add(def);
+				}	
+				param.Value = values.ToArray();
+				param.Default = defs.ToArray();
 				return param;
 			}
 		}
@@ -635,12 +647,15 @@ namespace VVVV.Nodes
 			else
 			{
 				var param = FRCPServer.CreateRGBAArrayParameter(label, sliceCount);
-				//TODO:set default, min, max
-				
 				var values = new List<Color>();
+				var defs = new List<Color>();
 				for (int i=0; i<sliceCount; i++)
+				{
 					values.Add(parse(pin, i));
+					defs.Add(def);
+				}
 				param.Value = values.ToArray(); 
+				param.Default = defs.ToArray(); 
 				return param;
 			}
 		}
@@ -659,12 +674,16 @@ namespace VVVV.Nodes
 			else
 			{
 				var param = FRCPServer.CreateEnumArrayParameter(label, sliceCount);
-				//TODO:set default, min, max
-				
+				//TODO:set entries
 				var values = new List<string>();
+				var defs = new List<string>();
 				for (int i=0; i<sliceCount; i++)
+				{
 					values.Add(parse(pin, i));
+					defs.Add(def);
+				}
 				param.Value = values.ToArray(); 
+				param.Default = defs.ToArray();
 				return param;
 			}
 		}
@@ -926,7 +945,6 @@ namespace RCP
 					}
 					case RcpTypes.Datatype.Array:
 					{
-						//TODO; handle array types properly
 						switch ((param.TypeDefinition as IArrayDefinition).ElementType)
 						{
 							case RcpTypes.Datatype.Boolean:
@@ -1163,7 +1181,6 @@ namespace RCP
 			return result;
 		}
 		
-		//TODO:
 		public static string TypeDefinitionToString(ITypeDefinition definition)
 		{
 			try
