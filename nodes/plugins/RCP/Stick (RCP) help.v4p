@@ -499,30 +499,12 @@
    </PIN>
    <PIN pinname="Columns" slicecount="1" values="1">
    </PIN>
-   <PIN pinname="Input String" visible="1" slicecount="4" values="default,default,endless,default">
+   <PIN pinname="Input String" visible="1" slicecount="1" values="default">
    </PIN>
    <PIN pinname="Rows" slicecount="1" values="6">
    </PIN>
    </NODE>
    <LINK srcnodeid="28" srcpinname="Widget" dstnodeid="38" dstpinname="Input String">
-   </LINK>
-   <NODE nodename="Stick (RCP)" componentmode="Hidden" id="39">
-   <BOUNDS type="Node" left="1065" top="2415" width="0" height="0">
-   </BOUNDS>
-   <BOUNDS type="Box" left="1065" top="2415" width="0" height="0">
-   </BOUNDS>
-   <PIN pinname="Parameters" visible="1">
-   </PIN>
-   </NODE>
-   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="39" dstpinname="Initialize">
-   </LINK>
-   <LINK srcnodeid="39" srcpinname="Client" dstnodeid="5" dstpinname="Client">
-   </LINK>
-   <LINK srcnodeid="22" srcpinname="Output String" dstnodeid="39" dstpinname="Remote Host">
-   </LINK>
-   <LINK srcnodeid="23" srcpinname="Y Output Value" dstnodeid="39" dstpinname="Remote Port">
-   </LINK>
-   <LINK srcnodeid="39" srcpinname="Connected" dstnodeid="26" dstpinname="Y Input Value">
    </LINK>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="40">
    <BOUNDS type="Box" left="10635" top="4455" width="900" height="1620">
@@ -537,7 +519,7 @@
    </PIN>
    <PIN pinname="Rows" slicecount="1" values="6">
    </PIN>
-   <PIN pinname="Input String" visible="1" slicecount="4" values=",,mygroup,mygroup">
+   <PIN pinname="Input String" visible="1" slicecount="1" values="||">
    </PIN>
    </NODE>
    <LINK srcnodeid="28" srcpinname="Group" dstnodeid="40" dstpinname="Input String">
@@ -554,6 +536,22 @@
    </NODE>
    <LINK srcnodeid="41" srcpinname="Output" dstnodeid="28" dstpinname="Input">
    </LINK>
-   <LINK srcnodeid="39" srcpinname="Parameters" dstnodeid="41" dstpinname="Input">
+   <NODE nodename="Stick (RCP)" componentmode="Hidden" id="46">
+   <BOUNDS type="Node" left="1065" top="2415" width="0" height="0">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1065" top="2415" width="0" height="0">
+   </BOUNDS>
+   </NODE>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="46" dstpinname="Initialize">
+   </LINK>
+   <LINK srcnodeid="46" srcpinname="Client" dstnodeid="5" dstpinname="Client">
+   </LINK>
+   <LINK srcnodeid="22" srcpinname="Output String" dstnodeid="46" dstpinname="Remote Host">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="Y Output Value" dstnodeid="46" dstpinname="Remote Port">
+   </LINK>
+   <LINK srcnodeid="46" srcpinname="Connected" dstnodeid="26" dstpinname="Y Input Value">
+   </LINK>
+   <LINK srcnodeid="46" srcpinname="Parameters" dstnodeid="41" dstpinname="Input">
    </LINK>
    </PATCH>

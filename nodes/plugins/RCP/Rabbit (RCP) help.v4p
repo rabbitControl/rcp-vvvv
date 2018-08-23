@@ -56,7 +56,7 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
-   <NODE systemname="IOBox (String)" nodename="IOBox (String)" componentmode="InABox" id="12" exposed="0">
+   <NODE systemname="IOBox (String)" nodename="IOBox (String)" componentmode="InABox" id="12" exposed="1">
    <BOUNDS type="Node" left="6165" top="1410" width="100" height="100">
    </BOUNDS>
    <BOUNDS type="Box" left="6165" top="1410" width="795" height="240">
@@ -83,7 +83,7 @@
    </PIN>
    <PIN pinname="Color Output" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Color Input" visible="1" pintype="Input" slicecount="1" values="|0.26093,0.68292,0.81251,0.00000|">
+   <PIN pinname="Color Input" visible="1" pintype="Input" slicecount="1" values="|0.00000,1.00000,0.00000,1.00000|">
    </PIN>
    </NODE>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="14" exposed="0">
@@ -145,9 +145,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="17">
-   <BOUNDS type="Box" left="1110" top="3915" width="420" height="240">
+   <BOUNDS type="Box" left="645" top="6345" width="420" height="240">
    </BOUNDS>
-   <BOUNDS type="Node" left="1110" top="3915" width="0" height="0">
+   <BOUNDS type="Node" left="645" top="6345" width="0" height="0">
    </BOUNDS>
    <PIN pinname="Units" slicecount="1" values="||">
    </PIN>
@@ -155,13 +155,15 @@
    </PIN>
    <PIN pinname="Value Type" slicecount="1" values="Integer">
    </PIN>
+   <PIN pinname="Y Input Value" visible="1">
+   </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="18">
-   <BOUNDS type="Node" left="1650" top="3915" width="1560" height="270">
+   <BOUNDS type="Node" left="1185" top="6345" width="1560" height="270">
    </BOUNDS>
-   <BOUNDS type="Box" left="1650" top="3915" width="1560" height="270">
+   <BOUNDS type="Box" left="1185" top="6345" width="2415" height="300">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; Connection Count|">
+   <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; Number of connected clients&cr;&lf;|">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -171,9 +173,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="19">
-   <BOUNDS type="Box" left="1095" top="1470" width="795" height="240">
+   <BOUNDS type="Box" left="630" top="3900" width="795" height="240">
    </BOUNDS>
-   <BOUNDS type="Node" left="1095" top="1470" width="0" height="0">
+   <BOUNDS type="Node" left="630" top="3900" width="0" height="0">
    </BOUNDS>
    <PIN pinname="Input String" slicecount="1" visible="1" values="127.0.0.1">
    </PIN>
@@ -187,9 +189,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="20">
-   <BOUNDS type="Box" left="1335" top="1965" width="555" height="240">
+   <BOUNDS type="Box" left="870" top="4395" width="555" height="240">
    </BOUNDS>
-   <BOUNDS type="Node" left="1335" top="1965" width="0" height="0">
+   <BOUNDS type="Node" left="870" top="4395" width="0" height="0">
    </BOUNDS>
    <PIN pinname="Y Input Value" slicecount="1" visible="1" values="10000">
    </PIN>
@@ -203,9 +205,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="21">
-   <BOUNDS type="Node" left="1935" top="1470" width="630" height="270">
+   <BOUNDS type="Node" left="1470" top="3900" width="630" height="270">
    </BOUNDS>
-   <BOUNDS type="Box" left="1935" top="1470" width="630" height="270">
+   <BOUNDS type="Box" left="1470" top="3900" width="630" height="270">
    </BOUNDS>
    <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; Host|">
    </PIN>
@@ -217,9 +219,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="22">
-   <BOUNDS type="Node" left="1935" top="1965" width="600" height="270">
+   <BOUNDS type="Node" left="1470" top="4395" width="600" height="270">
    </BOUNDS>
-   <BOUNDS type="Box" left="1935" top="1965" width="600" height="270">
+   <BOUNDS type="Box" left="1470" top="4395" width="600" height="270">
    </BOUNDS>
    <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; Port|">
    </PIN>
@@ -275,9 +277,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="44">
-   <BOUNDS type="Box" left="1800" top="2475" width="480" height="480">
+   <BOUNDS type="Box" left="1335" top="4905" width="480" height="480">
    </BOUNDS>
-   <BOUNDS type="Node" left="1800" top="2475" width="0" height="0">
+   <BOUNDS type="Node" left="1335" top="4905" width="0" height="0">
    </BOUNDS>
    <PIN pinname="Y Input Value" slicecount="1" visible="1" values="0">
    </PIN>
@@ -293,9 +295,9 @@
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="45">
-   <BOUNDS type="Node" left="2430" top="2505" width="7620" height="270">
+   <BOUNDS type="Node" left="1965" top="4935" width="7620" height="270">
    </BOUNDS>
-   <BOUNDS type="Box" left="2430" top="2505" width="2055" height="990">
+   <BOUNDS type="Box" left="1965" top="4935" width="2055" height="990">
    </BOUNDS>
    <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; Update Enums: In case the entries of any enumeration were changed, this needs to be triggered manually|">
    </PIN>
@@ -361,7 +363,7 @@
    </PIN>
    <PIN pinname="Show Grid" slicecount="1" values="1">
    </PIN>
-   <PIN pinname="Input String" slicecount="5" values="wer,hat,sdf,|der uhr|,|gedr eht?|">
+   <PIN pinname="Input String" slicecount="5" values="wer,hat,|an der|,uhr,gedreht?">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="56">
@@ -379,9 +381,9 @@
    </PIN>
    </NODE>
    <NODE nodename="Rabbit (RCP)" componentmode="Hidden" id="4" systemname="Rabbit (RCP)" filename="RCP.csproj">
-   <BOUNDS type="Node" left="1095" top="3210" width="0" height="0">
+   <BOUNDS type="Node" left="630" top="5640" width="0" height="0">
    </BOUNDS>
-   <BOUNDS type="Box" left="1095" top="3210" width="0" height="0">
+   <BOUNDS type="Box" left="630" top="5640" width="0" height="0">
    </BOUNDS>
    <PIN pinname="Output" visible="1">
    </PIN>
@@ -397,9 +399,9 @@
    </PIN>
    <PIN pinname="Update Enums" slicecount="1" visible="1" values="0">
    </PIN>
+   <PIN pinname="Client Count" visible="1">
+   </PIN>
    </NODE>
-   <LINK srcnodeid="4" srcpinname="Connection Count" dstnodeid="17" dstpinname="Y Input Value">
-   </LINK>
    <LINK srcnodeid="19" srcpinname="Output String" dstnodeid="4" dstpinname="Remote Host">
    </LINK>
    <LINK srcnodeid="20" srcpinname="Y Output Value" dstnodeid="4" dstpinname="Remote Port">
@@ -429,15 +431,15 @@
    </PIN>
    </NODE>
    <NODE systemname="Renderer (TTY)" nodename="Renderer (TTY)" componentmode="InAWindow" id="58">
-   <BOUNDS type="Node" left="8310" top="4935" width="100" height="100">
+   <BOUNDS type="Node" left="8700" top="6660" width="100" height="100">
    </BOUNDS>
-   <BOUNDS type="Box" left="8310" top="4935" width="2400" height="1800">
+   <BOUNDS type="Box" left="8700" top="6660" width="2400" height="1800">
    </BOUNDS>
    <BOUNDS type="Window" left="0" top="7755" width="11325" height="2580">
    </BOUNDS>
    </NODE>
    <NODE systemname="LinearSpread (Spreads)" nodename="LinearSpread (Spreads)" componentmode="Hidden" id="59">
-   <BOUNDS type="Node" left="8175" top="4065" width="100" height="100">
+   <BOUNDS type="Node" left="9150" top="4800" width="100" height="100">
    </BOUNDS>
    <PIN pinname="Alignment" visible="1">
    </PIN>
@@ -447,7 +449,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="9585" top="3855" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Input Enum" slicecount="3" visible="1" values="Centered,LeftJustified,Block">
+   <PIN pinname="Input Enum" slicecount="3" visible="1" values="Block,Centered,LeftJustified">
    </PIN>
    <PIN pinname="Default" slicecount="1" values="Centered">
    </PIN>
@@ -499,7 +501,45 @@
    </BOUNDS>
    <BOUNDS type="Box" left="5265" top="5295" width="3000" height="3000">
    </BOUNDS>
-   <PIN pinname="Label" slicecount="1" values="mygroup">
+   <PIN pinname="Label" slicecount="1" values="sd">
    </PIN>
    </NODE>
+   <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="64">
+   <BOUNDS type="Node" left="270" top="1200" width="6930" height="900">
+   </BOUNDS>
+   <BOUNDS type="Box" left="270" top="1200" width="4590" height="2250">
+   </BOUNDS>
+   <PIN pinname="Input String" visible="0" slicecount="1" values="|known problems:&cr;&lf;- deleting an exposed IOBox causes troubles&cr;&lf;- changing the slicecount of an exposed IOBox is not reflected in the exposed parameter&cr;&lf;- dynamically changing the enum of an exposed IOBox is not reflected in the exposed parameter&cr;&lf;- changing any properties of an IOBox (via the Inspektor) requires the IOBox to be re-exposed&cr;&lf;- undefined behavior with more than one Group node per patch|">
+   </PIN>
+   <PIN pinname="Output String" visible="0">
+   </PIN>
+   <PIN pinname="Show Grid" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="String Type" slicecount="1" values="MultiLine">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="4" srcpinname="Client Count" dstnodeid="17" dstpinname="Y Input Value">
+   </LINK>
+   <NODE systemname="LinearSpread (Spreads)" nodename="LinearSpread (Spreads)" componentmode="Hidden" id="65">
+   <BOUNDS type="Node" left="6600" top="4155" width="960" height="270">
+   </BOUNDS>
+   <PIN pinname="Alignment" visible="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Enumerations)" componentmode="InABox" id="66" exposed="0">
+   <BOUNDS type="Box" left="6945" top="3705" width="1215" height="270">
+   </BOUNDS>
+   <BOUNDS type="Node" left="6945" top="3705" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Input Enum" slicecount="1" visible="1" values="Centered">
+   </PIN>
+   <PIN pinname="Default" slicecount="1" values="Centered">
+   </PIN>
+   <PIN pinname="File Mask" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Maximum Characters" slicecount="1" values="-1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="66" srcpinname="Output Enum" dstnodeid="65" dstpinname="Alignment">
+   </LINK>
    </PATCH>
