@@ -22,7 +22,6 @@ using V3 = System.Numerics.Vector3;
 using V4 = System.Numerics.Vector4;
 
 using RCP;
-using RCP.Model;
 using RCP.Transporter;
 using RCP.Parameter;
 using RCP.Protocol;

@@ -18,7 +18,6 @@ using V3 = System.Numerics.Vector3;
 using V4 = System.Numerics.Vector4;
 
 using RCP;
-using RCP.Model;
 using RCP.Parameter;
 using RCP.Transporter;
 

@@ -11,7 +11,6 @@ using VVVV.Utils.VMath;
 using VVVV.Core.Logging;
 
 using RCP;
-using RCP.Model;
 using RCP.Parameter;
 using RCP.Protocol;
 using RCP.Transporter;
