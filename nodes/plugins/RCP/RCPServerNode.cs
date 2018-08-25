@@ -253,9 +253,11 @@ namespace VVVV.Nodes
 			TryWrap(node, pin);
 			
 			pin.Changed += PinValueChanged;
+			pin.SubtypeChanged += SubtypeChanged;
 			node.LabelPin.Changed += LabelChanged;
 			var tagPin = node.FindPin("Tag");
 			tagPin.Changed += TagChanged;
+			
 			//TODO: subscribe to subtype-pins here as well
 			//default, min, max, ...
 			
@@ -286,6 +288,7 @@ namespace VVVV.Nodes
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
 			pin.Changed -= PinValueChanged;
+			pin.SubtypeChanged -= SubtypeChanged;
 			node.LabelPin.Changed -= LabelChanged;
 			var tagPin = node.FindPin("Tag");
 			tagPin.Changed -= TagChanged;
@@ -372,18 +375,16 @@ namespace VVVV.Nodes
 	                        }
 							else
 							{
-								var def = RCP.Helpers.ParseInt(subtype[2]);
-								var min = RCP.Helpers.ParseInt(subtype[3]);
-								var max = RCP.Helpers.ParseInt(subtype[4]);
+								int def, min, max, mul;
+								ParseIntSubtype(subtype, out def, out min, out max, out mul);
 								parameter = GetNumberParameter<int>(label, sliceCount, 1, def, min, max, intStep, pin, (p,i) => RCP.Helpers.GetInt(p,i));
 							}
 						}
 						else if (float.TryParse(subtype[5], NumberStyles.Float, CultureInfo.InvariantCulture, out floatStep))
 						{
-							var def = RCP.Helpers.ParseFloat(subtype[2]);
-							var min	= RCP.Helpers.ParseFloat(subtype[3]);
-							var max = RCP.Helpers.ParseFloat(subtype[4]);
-							parameter = GetNumberParameter<float>(label, sliceCount, 1, def, min, max, floatStep, pin, (p,i) => RCP.Helpers.GetFloat(p,i));
+							float def, min, max, mul;
+							ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+							parameter = GetNumberParameter<float>(label, sliceCount, 1, def, min, max, mul, pin, (p,i) => RCP.Helpers.GetFloat(p,i));
 						}
 						
 						switch (subtype[0])
@@ -403,33 +404,39 @@ namespace VVVV.Nodes
 						//TODO: parse 2d subtype when pin.Subtype supports it
 						//var comps = subtype[2].Split(',');
 						//FLogger.Log(LogType.Debug, subtype[2]);
-						var def = new V2(RCP.Helpers.ParseFloat(subtype[2]));
-						var min = new V2(RCP.Helpers.ParseFloat(subtype[3]));
-						var max = new V2(RCP.Helpers.ParseFloat(subtype[4]));
-						var multipleOf = new V2(RCP.Helpers.ParseFloat(subtype[5]));
-						parameter = GetNumberParameter<V2>(label, sliceCount, 2, def, min, max, multipleOf, pin, (p,i) => RCP.Helpers.GetVector2(p,i));
+						float def, min, max, mul;
+						ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+						var def2 = new V2(def);
+						var min2 = new V2(min);
+						var max2 = new V2(max);
+						var mul2 = new V2(mul);
+						parameter = GetNumberParameter<V2>(label, sliceCount, 2, def2, min2, max2, mul2, pin, (p,i) => RCP.Helpers.GetVector2(p,i));
 					}
 					else if (dimensions == 3)
 					{
 						//TODO: parse 3d subtype when pin.Subtype supports it
 						//var comps = subtype[2].Split(',');
 						//FLogger.Log(LogType.Debug, subtype[2]);
-						var def = new V3(RCP.Helpers.ParseFloat(subtype[2]));
-						var min = new V3(RCP.Helpers.ParseFloat(subtype[3]));
-						var max = new V3(RCP.Helpers.ParseFloat(subtype[4]));
-						var multipleOf = new V3(RCP.Helpers.ParseFloat(subtype[5]));
-						parameter = GetNumberParameter<V3>(label, sliceCount, 3, def, min, max, multipleOf, pin, (p,i) => RCP.Helpers.GetVector3(p,i));
+						float def, min, max, mul;
+						ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+						var def3 = new V3(def);
+						var min3 = new V3(min);
+						var max3 = new V3(max);
+						var mul3 = new V3(RCP.Helpers.ParseFloat(subtype[5]));
+						parameter = GetNumberParameter<V3>(label, sliceCount, 3, def3, min3, max3, mul3, pin, (p,i) => RCP.Helpers.GetVector3(p,i));
 					}
 					else if (dimensions == 4)
 					{
 						//TODO: parse 3d subtype when pin.Subtype supports it
 						//var comps = subtype[2].Split(',');
 						//FLogger.Log(LogType.Debug, subtype[2]);
-						var def = new V4(RCP.Helpers.ParseFloat(subtype[2]));
-						var min = new V4(RCP.Helpers.ParseFloat(subtype[3]));
-						var max = new V4(RCP.Helpers.ParseFloat(subtype[4]));
-						var multipleOf = new V4(RCP.Helpers.ParseFloat(subtype[5]));
-						parameter = GetNumberParameter<V4>(label, sliceCount, 4, def, min, max, multipleOf, pin, (p,i) => RCP.Helpers.GetVector4(p,i));
+						float def, min, max, mul;
+						ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+						var def4 = new V4(def);
+						var min4 = new V4(min);
+						var max4 = new V4(max);
+						var mul4 = new V4(mul);
+						parameter = GetNumberParameter<V4>(label, sliceCount, 4, def4, min4, max4, mul4, pin, (p,i) => RCP.Helpers.GetVector4(p,i));
 					}
 					break;
 				}
@@ -458,7 +465,9 @@ namespace VVVV.Nodes
 					}
 					else 
 					{
-						parameter = GetStringParameter(label, sliceCount, def, pin, (p,i) => p[i]);
+						var maxChars = -1;
+						int.TryParse(subtype[3], out maxChars);
+						parameter = GetStringParameter(label, sliceCount, def, maxChars, pin, (p,i) => p[i]);
 					}
 					
 					break;
@@ -485,8 +494,9 @@ namespace VVVV.Nodes
 			//no suitable parameter found?
 			if (parameter == null)
 			{
-				parameter = FRCPServer.CreateStringParameter("Unknown Type");
-				parameter.Description = label;
+				parameter = FRCPServer.CreateStringParameter(label);
+				(parameter as IStringParameter).Value = "Unknown Type";
+				//parameter.Readonly = true;
 			}
 
 			//FLogger.Log(LogType.Debug, address + " - " + ParentMap.GetName(address));
@@ -506,30 +516,33 @@ namespace VVVV.Nodes
 			return parameter;
 		}
 		
+		private void ParseFloatSubtype(string[] subtype, out float def, out float min, out float max, out float mul)
+		{
+			def = RCP.Helpers.ParseFloat(subtype[2]);
+			min	= RCP.Helpers.ParseFloat(subtype[3]);
+			max = RCP.Helpers.ParseFloat(subtype[4]);
+			mul = RCP.Helpers.ParseFloat(subtype[5]);
+		}
+
+		private void ParseIntSubtype(string[] subtype, out int def, out int min, out int max, out int mul)
+		{
+			def = RCP.Helpers.ParseInt(subtype[2]);
+			min	= RCP.Helpers.ParseInt(subtype[3]);
+			max = RCP.Helpers.ParseInt(subtype[4]);
+			mul = RCP.Helpers.ParseInt(subtype[5]);
+		}
+		
 		private void ParameterUpdated(object sender, EventArgs e)
         {
         	IPin2 pin;
         	if (FCachedPins.TryGetValue((sender as IParameter).UserId, out pin))
         	{
 				pin.Spread = RCP.Helpers.ValueToString(sender as IParameter);
-        		FLogger.Log(LogType.Debug, "remote: " + pin.Spread);
+        		//FLogger.Log(LogType.Debug, "remote: " + pin.Spread);
         	}
         }
 		
-		private EnumDefinition GetEnumDefinition(string enumName, string deflt)
-		{
-			var entryCount = EnumManager.GetEnumEntryCount(enumName);
-            var entries = new List<string>();
-            for (int i = 0; i < entryCount; i++)
-                entries.Add(EnumManager.GetEnumEntryString(enumName, i));
-
-            var def = new EnumDefinition();
-            def.Default = deflt; //(ushort) entries.IndexOf(deflt);
-        	def.Entries = entries.ToArray();
-			
-			return def;
-		}
-		
+		#region GetParameter
 		private IParameter GetBoolParameter(string label, int sliceCount, bool def, IPin2 pin, Func<IPin2, int, bool> parse)
 		{
 			if (sliceCount == 1)
@@ -587,12 +600,14 @@ namespace VVVV.Nodes
 			}
 		}
 			
-		private IParameter GetStringParameter(string label, int sliceCount, string def, IPin2 pin, Func<IPin2, int, string> parse)
+		private IParameter GetStringParameter(string label, int sliceCount, string def, int maxChars, IPin2 pin, Func<IPin2, int, string> parse)
 		{
 			if (sliceCount == 1)
 			{
 				var param = FRCPServer.CreateStringParameter(label);
 				param.Default = def;
+//				if (maxChars > -1)
+//					param.RegularExpression = ".{0," + maxChars.ToString() + "}";
 				param.Value = parse(pin, 0);
 				return param;
 			}
@@ -693,24 +708,22 @@ namespace VVVV.Nodes
 			}
 		}
 		
-		private void LabelChanged(object sender, EventArgs e)
+		private EnumDefinition GetEnumDefinition(string enumName, string deflt)
 		{
-			var labelPin = sender as IPin2;
-			var userId = IdFromPin(labelPin);
+			var entryCount = EnumManager.GetEnumEntryCount(enumName);
+            var entries = new List<string>();
+            for (int i = 0; i < entryCount; i++)
+                entries.Add(EnumManager.GetEnumEntryString(enumName, i));
+
+            var def = new EnumDefinition();
+            def.Default = deflt; //(ushort) entries.IndexOf(deflt);
+        	def.Entries = entries.ToArray();
 			
-			FCachedParams[userId].Label = labelPin.Spread.Trim('|');
-			FRCPServer.Update();
+			return def;
 		}
+		#endregion
 		
-		private void TagChanged(object sender, EventArgs e)
-		{
-			var tagPin = sender as IPin2;
-			var userId = IdFromPin(tagPin);
-			
-			FCachedParams[userId].Userdata = Encoding.UTF8.GetBytes(tagPin.Spread.Trim('|'));
-			FRCPServer.Update();
-		}
-		
+		#region PinsChanged
 		//the application updated a value
 		private void PinValueChanged(object sender, EventArgs e)
 		{
@@ -744,19 +757,73 @@ namespace VVVV.Nodes
 			RCP.Helpers.StringToValue(param, pin.Spread);
 			
 			FRCPServer.Update();
-			
-			//OutputBytes(param);
 		}
 		
-		private void OutputBytes(IParameter param)
+		private void SubtypeChanged(object sender, EventArgs e)
 		{
-			using (var stream = new MemoryStream())
-			using (var writer = new BinaryWriter(stream))
+			var pin = sender as IPin2;
+			var labelPin = sender as IPin2;
+			var userId = IdFromPin(labelPin);
+			
+			var param = FCachedParams[userId];
+			var subtype = pin.SubType.Split(',').Select(s => s.Trim()).ToArray();
+			
+			switch (param.TypeDefinition.Datatype)
 			{
-				param.Write(writer);
-				//FOutput.AssignFrom(stream.ToArray());
+				case RcpTypes.Datatype.Boolean:
+				{
+					var f = (param as IBooleanParameter);
+					f.Default = subtype[2] == "1";
+					break;
+				}
+				case RcpTypes.Datatype.Float32:
+				{
+					var f = (param as INumberParameter<float>);
+					float def, min, max, mul;
+					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+					f.Default = def;
+					f.Minimum = min;
+					f.Maximum = max;
+					f.MultipleOf = mul;
+					f.Unit = subtype[6];
+					break;
+				}
+				case RcpTypes.Datatype.Int32:
+				{
+					var f = (param as INumberParameter<int>);
+					int def, min, max, mul;
+					ParseIntSubtype(subtype, out def, out min, out max, out mul);
+					f.Default = def;
+					f.Minimum = min;
+					f.Maximum = max;
+					f.MultipleOf = mul;
+					f.Unit = subtype[6];
+					break;
+				}
+				
+				//TODO: subtypes for string, uri, enum, color, vectors
 			}
+			FRCPServer.Update();
 		}
+		
+		private void LabelChanged(object sender, EventArgs e)
+		{
+			var labelPin = sender as IPin2;
+			var userId = IdFromPin(labelPin);
+			
+			FCachedParams[userId].Label = labelPin.Spread.Trim('|');
+			FRCPServer.Update();
+		}
+		
+		private void TagChanged(object sender, EventArgs e)
+		{
+			var tagPin = sender as IPin2;
+			var userId = IdFromPin(tagPin);
+			
+			FCachedParams[userId].Userdata = Encoding.UTF8.GetBytes(tagPin.Spread.Trim('|'));
+			FRCPServer.Update();
+		}
+		#endregion
 	}
 }
 
@@ -1198,27 +1265,27 @@ namespace RCP
 					case RcpTypes.Datatype.Int32:
 					{
 						var def = (INumberDefinition<int>)definition;
-						return Int32ToString(def.Default) + ", " + Int32ToString((int)def.Minimum) + ", " + Int32ToString((int)def.Maximum) + ", " + Int32ToString((int)def.MultipleOf);
+						return Int32ToString(def.Default) + ", " + Int32ToString((int)def.Minimum) + ", " + Int32ToString((int)def.Maximum) + ", " + Int32ToString((int)def.MultipleOf) + ", " + def.Unit;
 					}
 					case RcpTypes.Datatype.Float32:
 					{
 						var def = (INumberDefinition<float>)definition;
-						return Float32ToString(def.Default) + ", " + Float32ToString((float)def.Minimum) + ", " + Float32ToString((float)def.Maximum) + ", " + Float32ToString((float)def.MultipleOf);
+						return Float32ToString(def.Default) + ", " + Float32ToString((float)def.Minimum) + ", " + Float32ToString((float)def.Maximum) + ", " + Float32ToString((float)def.MultipleOf) + ", " + def.Unit;
 					}
 					case RcpTypes.Datatype.Vector2f32:
 					{
 						var def = (INumberDefinition<V2>)definition;
-						return Vector2f32ToString(def.Default) + ", " + Vector2f32ToString((V2)def.Minimum) + ", " + Vector2f32ToString((V2)def.Maximum) + ", " + Vector2f32ToString((V2)def.MultipleOf);
+						return Vector2f32ToString(def.Default) + ", " + Vector2f32ToString((V2)def.Minimum) + ", " + Vector2f32ToString((V2)def.Maximum) + ", " + Vector2f32ToString((V2)def.MultipleOf) + ", " + def.Unit;
 					}
 					case RcpTypes.Datatype.Vector3f32:
 					{
 						var def = (INumberDefinition<V3>)definition;
-						return Vector3f32ToString(def.Default) + ", " + Vector3f32ToString((V3)def.Minimum) + ", " + Vector3f32ToString((V3)def.Maximum) + ", " + Vector3f32ToString((V3)def.MultipleOf);
+						return Vector3f32ToString(def.Default) + ", " + Vector3f32ToString((V3)def.Minimum) + ", " + Vector3f32ToString((V3)def.Maximum) + ", " + Vector3f32ToString((V3)def.MultipleOf) + ", " + def.Unit;
 					}
 					case RcpTypes.Datatype.Vector4f32:
 					{
 						var def = (INumberDefinition<V4>)definition;
-						return Vector4f32ToString(def.Default) + ", " + Vector4f32ToString((V4)def.Minimum) + ", " + Vector4f32ToString((V4)def.Maximum) + ", " + Vector4f32ToString((V4)def.MultipleOf);
+						return Vector4f32ToString(def.Default) + ", " + Vector4f32ToString((V4)def.Minimum) + ", " + Vector4f32ToString((V4)def.Maximum) + ", " + Vector4f32ToString((V4)def.MultipleOf) + ", " + def.Unit;
 					}
 					case RcpTypes.Datatype.String:
 					{
