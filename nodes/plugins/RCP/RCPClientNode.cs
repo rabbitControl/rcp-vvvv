@@ -130,6 +130,7 @@ namespace VVVV.Nodes
 			FRCPClient.Initialize();
 		}
 		
+		//updates all parameters
 		private void UpdateOutputs()
 		{
 			var parameters = FParamIds.Select(id => FRCPClient.GetParameter(id)).OrderBy(p => p.Order);
@@ -141,6 +142,7 @@ namespace VVVV.Nodes
 			FParameters.AssignFrom(ps);
 		}
 		
+		//update one parameter
 		private void ParameterUpdated(object sender, EventArgs e)
 		{
 			var p = sender as IParameter;

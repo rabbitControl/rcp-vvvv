@@ -63,13 +63,14 @@ namespace VVVV.Nodes
 		
 		RCPServer FRCPServer;
 		WebsocketServerTransporter FTransporter;
-		Dictionary<string, IGroupParameter> FGroups = new Dictionary<string, IGroupParameter>();
-		Dictionary<string, IPin2> FCachedPins = new Dictionary<string, IPin2>();
-		Dictionary<string, IParameter> FCachedParams = new Dictionary<string, IParameter>();
-		Dictionary<string, List<IParameter>> FParameters = new Dictionary<string, List<IParameter>>();
-		readonly Dictionary<IPin2, IOBox> FWatchedIOBoxes = new Dictionary<IPin2, IOBox>();
 		
-		List<IParameter> FParameterQueue = new List<IParameter>();
+		//address -> IGroupParameter
+		Dictionary<string, IGroupParameter> FGroups = new Dictionary<string, IGroupParameter>();
+		//userid -> IPin2
+		Dictionary<string, IPin2> FCachedPins = new Dictionary<string, IPin2>();
+		//userid -> IParameter
+		Dictionary<string, IParameter> FCachedParams = new Dictionary<string, IParameter>();
+		readonly Dictionary<IPin2, IOBox> FWatchedIOBoxes = new Dictionary<IPin2, IOBox>();
 		#endregion fields & pins
 		  
 		public RCPRabbitNode()
@@ -111,9 +112,6 @@ namespace VVVV.Nodes
 			FCachedPins.Clear();
 			FCachedParams.Clear();
 			FWatchedIOBoxes.Clear();
-			//FNodeToIdMap.Clear();
-			
-			FParameterQueue.Clear();
 		}
 		
 		private void GroupAdded(string address)
@@ -123,15 +121,10 @@ namespace VVVV.Nodes
 				var group = FRCPServer.CreateGroup(GroupMap.GetName(address));
 				FGroups.Add(address, group);
 				
-				//FLogger.Log(LogType.Debug, "group added: " + group.Label + " #" + group.Id.ToString());
-				
 				//move all ioboxes of the groups patch to the group
 				var ps = GetGroupParameters(address);
 				foreach (var param in ps)
-				{
-					//FLogger.Log(LogType.Debug, "to " + group.Label + ": " + param.Label);
 					FRCPServer.AddParameter(param, group);
-				}	
 				
 				FRCPServer.Update();
 			}
@@ -142,15 +135,11 @@ namespace VVVV.Nodes
 			if (FGroups.ContainsKey(address))
 			{
 				var group = FGroups[address];
-				//FLogger.Log(LogType.Debug, "group removed: " + group.Label);
 				
 				//move all params of the group to the root group
 				var paramsOfGroup = GetGroupParameters(address);
 				foreach (var param in paramsOfGroup)
-				{
-					//FLogger.Log(LogType.Debug, "to root: " + param.Label);
 					FRCPServer.AddParameter(param, null);
-				}	
 				
 				//then remove the actual group-param
 				FRCPServer.RemoveParameter(group);
@@ -160,6 +149,7 @@ namespace VVVV.Nodes
 			}
 		}
 		
+		//TODO: remove this when rcpserver has GetParamByUserId
 		private IEnumerable<IParameter> GetGroupParameters(string address)
 		{
 			var paramIds = FCachedParams.Values.Select(p => p.Id);
@@ -172,7 +162,6 @@ namespace VVVV.Nodes
 				lastSlash = temp.LastIndexOf('/');
 				var parentPath = param.UserId.Substring(0, lastSlash);
 				
-				//FLogger.Log(LogType.Debug, "temp: " + temp);
 				if (parentPath == address)
 					yield return param;
 			}
@@ -238,27 +227,6 @@ namespace VVVV.Nodes
 	            	FRCPServer.Update();
             }
 			
-			//process FParameterQueue
-			//in order to handle all messages from main thread
-			//since all COM-access is single threaded
-			/*lock(FParameterQueue)
-			{
-				foreach (var param in FParameterQueue)
-				{
-					IPin2 pin;
-//					if (FParameterQueue.Any())
-//						FLogger.Log(LogType.Debug, "updates: " + FParameterQueue.Count.ToString());
-					if (FCachedPins.TryGetValue(param.UserId, out pin))
-						{
-//							pin.Spread = RCP.Helpers.ValueToString(param);
-							pin.Spread = RCP.Helpers.Float32ToString(((IValueParameter<float>)param).Value);
-//							FLogger.Log(LogType.Debug, "userid: " + param.UserId);
-//							FLogger.Log(LogType.Debug, "spread: " + pin.Spread);
-						}
-				}
-				FParameterQueue.Clear();
-			}*/
-			
 			FConnectionCount[0] = FTransporter.ConnectionCount;
 		}
 		
@@ -308,9 +276,6 @@ namespace VVVV.Nodes
 				//FLogger.Log(LogType.Debug, "added to: " + group.Label);
 			}
 			
-			//AddParamToPatch(parentId, param);
-			//OutputBytes(param);
-
 			FRCPServer.Update();
 		}
 		
@@ -331,10 +296,7 @@ namespace VVVV.Nodes
 			param.Updated -= ParameterUpdated;
 			FRCPServer.RemoveParameter(param);
 			FCachedParams.Remove(userId);
-//			
-//			var rcpId = id.ToRCPId();
-//			RemoveParamFromPatch(ParentIdFromNode(node), FRCPServer.GetParameter(rcpId));
-			
+
 			FRCPServer.Update();
 		}
 		
@@ -373,11 +335,16 @@ namespace VVVV.Nodes
 		{
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
+			FLogger.Log(LogType.Debug, "name: " + pinName);
+			FLogger.Log(LogType.Debug, "type: " + pin.Type);
+			
 			var id = IdFromPin(pin);
 			
 			IParameter parameter = null;
 			
-			var subtype = pin.SubType.Split(',').Select(s => s.Trim()).ToArray();
+			var subtype = new string[0];
+			if (!string.IsNullOrEmpty(pin.SubType))
+				subtype = pin.SubType.Split(',').Select(s => s.Trim()).ToArray();
 			var sliceCount = pin.SliceCount;
 			var label = pin.ParentNode.LabelPin.Spread.Trim('|');
 			
@@ -531,8 +498,6 @@ namespace VVVV.Nodes
 			//userid
 			parameter.UserId = userId;
 			
-			
-			
 			//userdata
 			var tag = node.FindPin("Tag");
             if (tag != null)
@@ -549,11 +514,7 @@ namespace VVVV.Nodes
 				pin.Spread = RCP.Helpers.ValueToString(sender as IParameter);
         		FLogger.Log(LogType.Debug, "remote: " + pin.Spread);
         	}
-        	
-//            lock(FParameterQueue)
-//				FParameterQueue.Add(sender as IParameter);
         }
-		
 		
 		private EnumDefinition GetEnumDefinition(string enumName, string deflt)
 		{
@@ -567,21 +528,6 @@ namespace VVVV.Nodes
         	def.Entries = entries.ToArray();
 			
 			return def;
-		}
-		
-		private void AddParamToPatch(string address, IParameter param)
-		{
-			if (!FParameters.ContainsKey(address))
-				FParameters.Add(address, new List<IParameter>());
-			
-			FParameters[address].Add(param);
-		}
-		
-		private void RemoveParamFromPatch(string address, IParameter param)
-		{
-			FParameters[address].Remove(param);
-			if (FParameters[address].Count == 0)
-				FParameters.Remove(address);
 		}
 		
 		private IParameter GetBoolParameter(string label, int sliceCount, bool def, IPin2 pin, Func<IPin2, int, bool> parse)
@@ -811,13 +757,6 @@ namespace VVVV.Nodes
 				//FOutput.AssignFrom(stream.ToArray());
 			}
 		}
-		
-		//an RCP client has updated a value
-//		private void ParameterUpdated(IParameter parameter)
-//		{
-//			lock(FParameterQueue)
-//				FParameterQueue.Add(parameter);
-//		}
 	}
 }
 
