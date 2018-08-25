@@ -1,5 +1,5 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50debug36.1.dtd" >
-   <PATCH nodename="C:\Users\joreg\Documents\repos\vvvv\public\vvvv45\packs\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="15" scrolly="135">
+   <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Stick (RCP) help.v4p" scrollx="15" scrolly="135">
    <BOUNDS type="Window" left="11370" top="0" width="12495" height="9735">
    </BOUNDS>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="3">
@@ -536,7 +536,7 @@
    </NODE>
    <LINK srcnodeid="41" srcpinname="Output" dstnodeid="28" dstpinname="Input">
    </LINK>
-   <NODE nodename="Stick (RCP)" componentmode="Hidden" id="46">
+   <NODE nodename="Stick (RCP)" componentmode="Hidden" id="46" systemname="Stick (RCP)" filename="RCP.csproj">
    <BOUNDS type="Node" left="915" top="2820" width="0" height="0">
    </BOUNDS>
    <BOUNDS type="Box" left="915" top="2820" width="0" height="0">

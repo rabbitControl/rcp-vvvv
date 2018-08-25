@@ -67,6 +67,7 @@ namespace VVVV.Nodes
 		Dictionary<string, IPin2> FCachedPins = new Dictionary<string, IPin2>();
 		Dictionary<string, IParameter> FCachedParams = new Dictionary<string, IParameter>();
 		Dictionary<string, List<IParameter>> FParameters = new Dictionary<string, List<IParameter>>();
+		readonly Dictionary<IPin2, IOBox> FWatchedIOBoxes = new Dictionary<IPin2, IOBox>();
 		
 		List<IParameter> FParameterQueue = new List<IParameter>();
 		#endregion fields & pins
@@ -109,6 +110,7 @@ namespace VVVV.Nodes
 			FGroups.Clear();
 			FCachedPins.Clear();
 			FCachedParams.Clear();
+			FWatchedIOBoxes.Clear();
 			//FNodeToIdMap.Clear();
 			
 			FParameterQueue.Clear();
@@ -198,10 +200,48 @@ namespace VVVV.Nodes
 					PinValueChanged(enumPin, null);
 			}
 
+			var anyOutBoxChanged = false;
+			foreach (var pin in FWatchedIOBoxes.Keys)
+            {
+            	if (pin.IsConnected())
+            	{
+            		var ioBox = FWatchedIOBoxes[pin];
+            		if (ioBox.Sync())
+                	{
+                		anyOutBoxChanged = true;
+						var userId = IdFromPin(pin);
+						var param = FCachedParams[userId];
+						//in case of enum pin we also update the full definition here
+						//which may have changed in the meantime
+						//TODO: subscribe to enum-changes on the host and update all related
+						//parameters as changes happen, so a client can update its gui accordingly
+						if (pin.Type == "Enumeration")
+						{
+							var subtype = pin.SubType.Split(',').Select(s => s.Trim()).ToArray();
+							var enumName = subtype[1].Trim();
+							var dflt = subtype[2].Trim();
+							var newDef = GetEnumDefinition(enumName, dflt);
+							IEnumDefinition paramDef;
+							if (pin.SliceCount == 1)
+								paramDef = param.TypeDefinition as IEnumDefinition;
+							else
+								paramDef = (param.TypeDefinition as IArrayDefinition).ElementDefinition as IEnumDefinition;
+							paramDef.Default = newDef.Default;
+							paramDef.Entries = newDef.Entries;
+							//FLogger.Log(LogType.Debug, "count: " + pin.Spread);
+						}
+						RCP.Helpers.StringToValue(param, pin.Spread);
+                	}
+                }
+            	
+            	if (anyOutBoxChanged)
+	            	FRCPServer.Update();
+            }
+			
 			//process FParameterQueue
 			//in order to handle all messages from main thread
 			//since all COM-access is single threaded
-			lock(FParameterQueue)
+			/*lock(FParameterQueue)
 			{
 				foreach (var param in FParameterQueue)
 				{
@@ -217,15 +257,33 @@ namespace VVVV.Nodes
 						}
 				}
 				FParameterQueue.Clear();
-			}
+			}*/
 			
 			FConnectionCount[0] = FTransporter.ConnectionCount;
 		}
+		
+		void TryWrap(INode2 node, IPin2 pin)
+        {
+            var ioBox = IOBox.Wrap(node);
+            if (ioBox != null)
+                FWatchedIOBoxes.Add(pin, ioBox);
+            else
+                FLogger.Log(LogType.Error, "Wrapper for IO box " + node + " not implemented.");
+        }
+
+        void Remove(INode2 node)
+        {
+        	var pinName = PinNameFromNode(node);
+			var pin = node.FindPin(pinName);
+            FWatchedIOBoxes.Remove(pin);
+        }
 		
 		private void NodeAddedCB(INode2 node)
 		{
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
+			TryWrap(node, pin);
+			
 			pin.Changed += PinValueChanged;
 			node.LabelPin.Changed += LabelChanged;
 			var tagPin = node.FindPin("Tag");
@@ -258,6 +316,8 @@ namespace VVVV.Nodes
 		
 		private void NodeRemovedCB(INode2 node)
 		{
+			Remove(node);
+			
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
 			pin.Changed -= PinValueChanged;
@@ -1266,4 +1326,216 @@ namespace RCP
 			}
 		}
 	}
+	
+	/// <summary>
+    /// Little wrapper around the native IO boxes so we've a unified view on them.
+    /// </summary>
+    abstract class IOBox
+    {
+        public static IOBox Wrap(INode2 node)
+        {
+            return Wrap(node.InternalCOMInterf, node.NodeInfo);
+        }
+
+        public static IOBox Wrap(INode node, INodeInfo nodeInfo)
+        {
+            var name = nodeInfo.ToString();
+            switch (name)
+            {
+                case "IOBox (Value Advanced)":
+                    return new ValueIOBox(node, nodeInfo);
+                case "IOBox (Color)":
+                    return new ColorIOBox(node, nodeInfo);
+                case "IOBox (String)":
+                    return new StringIOBox(node, nodeInfo);
+            	case "IOBox (Enumerations)":
+                    return new EnumIOBox(node, nodeInfo);
+                default:
+                    break;
+            }
+            return null;
+        }
+
+        public IOBox(INode node, INodeInfo nodeInfo)
+        {
+            Id = node.GetNodePath(useDescriptiveNames: false);
+            Name = nodeInfo.ToString();
+            Node = node;
+            InputPin = GetInputPin(node);
+        }
+
+        /// <summary>
+        /// Pointer to the native IO box node.
+        /// </summary>
+        public INode Node { get; private set; }
+
+        /// <summary>
+        /// Pointer to the native input pin of the IO box.
+        /// </summary>
+        public IPin InputPin { get; private set; }
+
+        /// <summary>
+        /// The ID of the IO box.
+        /// </summary>
+        public string Id { get; private set; }
+
+        /// <summary>
+        /// The name of the IO box.
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// Retrieve the input pin with which to sync.
+        /// </summary>
+        protected abstract IPin GetInputPin(INode node);
+
+        /// <summary>
+        /// Sync our spread with the native pin.
+        /// </summary>
+        /// <returns>True if the data changed.</returns>
+        public abstract bool Sync();
+
+        public override string ToString()
+        {
+            return Name + " " + Id;
+        }
+    }
+
+    abstract class IOBox<T> : IOBox
+    {
+        public IOBox(INode node, INodeInfo nodeInfo) : base(node, nodeInfo)
+        {
+            Spread = new Spread<T>();
+        }
+
+        public Spread<T> Spread { get; private set; }
+    }
+
+    sealed class ValueIOBox : IOBox<double>
+    {
+        readonly IValueData FData;
+
+        public ValueIOBox(INode node, INodeInfo nodeInfo) : base(node, nodeInfo)
+        {
+            FData = InputPin as IValueData;
+        }
+
+        protected override IPin GetInputPin(INode node)
+        {
+            return node.GetPin("Y Input Value");
+        }
+
+        public override bool Sync()
+        {
+            var changed = false;
+            Spread.SliceCount = InputPin.SliceCount;
+            for (int i = 0; i < Spread.SliceCount; i++)
+            {
+                double value;
+                FData.GetValue(i, out value);
+                if (value != Spread[i])
+                {
+                    Spread[i] = value;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+    }
+
+    sealed class StringIOBox : IOBox<string>
+    {
+        readonly IStringData FData;
+
+        public StringIOBox(INode node, INodeInfo nodeInfo) : base(node, nodeInfo)
+        {
+            FData = InputPin as IStringData;
+        }
+
+        protected override IPin GetInputPin(INode node)
+        {
+            return node.GetPin("Input String");
+        }
+
+        public override bool Sync()
+        {
+            var changed = false;
+            Spread.SliceCount = InputPin.SliceCount;
+            for (int i = 0; i < Spread.SliceCount; i++)
+            {
+                string value;
+                FData.GetString(i, out value);
+                if (value != Spread[i])
+                {
+                    Spread[i] = value;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+    }
+
+    sealed class ColorIOBox : IOBox<RGBAColor>
+    {
+        readonly IColorData FData;
+
+        public ColorIOBox(INode node, INodeInfo nodeInfo) : base(node, nodeInfo)
+        {
+            FData = InputPin as IColorData;
+        }
+
+        protected override IPin GetInputPin(INode node)
+        {
+            return node.GetPin("Color Input");
+        }
+
+        public override bool Sync()
+        {
+            var changed = false;
+            Spread.SliceCount = InputPin.SliceCount;
+            for (int i = 0; i < Spread.SliceCount; i++)
+            {
+                RGBAColor value;
+                FData.GetColor(i, out value);
+                if (value != Spread[i])
+                {
+                    Spread[i] = value;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+    }
+	
+	sealed class EnumIOBox : IOBox<string>
+    {
+        readonly IStringData FData;
+
+        public EnumIOBox(INode node, INodeInfo nodeInfo) : base(node, nodeInfo)
+        {
+            FData = InputPin as IStringData;
+        }
+
+        protected override IPin GetInputPin(INode node)
+        {
+            return node.GetPin("Input Enum");
+        }
+
+        public override bool Sync()
+        {
+            var changed = false;
+            Spread.SliceCount = InputPin.SliceCount;
+            for (int i = 0; i < Spread.SliceCount; i++)
+            {
+                string value;
+                FData.GetString(i, out value);
+                if (value != Spread[i])
+                {
+                    Spread[i] = value;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+    }
 }
