@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50debug36.1.dtd" >
    <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Rabbit (RCP) help.v4p" scrollx="0" scrolly="0" bgcolor="15527148">
-   <BOUNDS type="Window" left="0" top="0" width="11520" height="9720">
+   <BOUNDS type="Window" left="0" top="0" width="11520" height="9645">
    </BOUNDS>
    <NODE nodename="IOBox (String)" componentmode="InABox" id="3">
    <BOUNDS type="Node" left="225" top="225" width="5100" height="450">
@@ -41,7 +41,7 @@
    </PIN>
    <PIN pinname="X Input Value" slicecount="1" values="0">
    </PIN>
-   <PIN pinname="Minimum" slicecount="1" values="-5">
+   <PIN pinname="Minimum" slicecount="1" values="-3">
    </PIN>
    <PIN pinname="Maximum" slicecount="1" values="5">
    </PIN>
@@ -97,7 +97,7 @@
    </BOUNDS>
    <PIN pinname="Rows" slicecount="1" values="2">
    </PIN>
-   <PIN pinname="Y Input Value" slicecount="2" visible="1" pintype="Input" values="0,0.952066071797162">
+   <PIN pinname="Y Input Value" slicecount="2" visible="1" pintype="Input" values="1,1">
    </PIN>
    <PIN pinname="Vector Size" slicecount="1" values="2">
    </PIN>
@@ -108,6 +108,12 @@
    <PIN pinname="Evaluate" visible="-1" pintype="Input" slicecount="1" values="1">
    </PIN>
    <PIN pinname="Y Output Value" visible="1" pintype="Output">
+   </PIN>
+   <PIN pinname="Minimum" slicecount="1" values="-2">
+   </PIN>
+   <PIN pinname="Maximum" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="X Input Value" slicecount="2" values="1,1">
    </PIN>
    </NODE>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="15" exposed="0">
@@ -143,9 +149,11 @@
    </PIN>
    <PIN pinname="Y Output Value" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="0">
+   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="5">
    </PIN>
    <PIN pinname="X Input Value" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Minimum" slicecount="1" values="0">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="17">
@@ -159,7 +167,7 @@
    </PIN>
    <PIN pinname="Value Type" slicecount="1" values="Integer">
    </PIN>
-   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="2">
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="1">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="18">
@@ -357,7 +365,7 @@
    </PIN>
    <PIN pinname="Rows" slicecount="1" values="5">
    </PIN>
-   <PIN pinname="Color Input" slicecount="5" values="|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|" visible="1">
+   <PIN pinname="Color Input" slicecount="5" visible="1" values="|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|,|0.15640,0.46000,0.44099,1.00000|">
    </PIN>
    </NODE>
    <NODE systemname="IOBox (String)" nodename="IOBox (String)" componentmode="InABox" id="51" exposed="0">
@@ -467,9 +475,9 @@
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="64">
    <BOUNDS type="Node" left="5160" top="6450" width="6930" height="900">
    </BOUNDS>
-   <BOUNDS type="Box" left="5160" top="6450" width="4935" height="2430">
+   <BOUNDS type="Box" left="5160" top="6450" width="4920" height="2295">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|known problems:&cr;&lf;- deleting an exposed IOBox causes troubles&cr;&lf;- changing the slicecount of an exposed IOBox is not reflected in the exposed parameter&cr;&lf;- dynamically changing the enum of an exposed IOBox is not reflected in the exposed parameter and requires the &quot;Update Enums&quot; input on the rabbit to be triggered manually&cr;&lf;- changing any properties of an IOBox (via the Inspektor) requires the IOBox to be re-exposed&cr;&lf;- undefined behavior with more than one Group node per patch|">
+   <PIN pinname="Input String" visible="0" slicecount="1" values="|known problems:&cr;&lf;- deleting an exposed IOBox causes troubles&cr;&lf;- changing the slicecount of an exposed IOBox is not reflected in the exposed parameter&cr;&lf;- dynamically changing the enum of an exposed IOBox is not reflected in the exposed parameter and requires the &quot;Update Enums&quot; input on the rabbit to be triggered manually&cr;&lf;- undefined behavior with more than one Group node per patch&cr;&lf;- changing either of the following properties of a number IOBox via the inspektor requires it to be re-exposed: Value Type, Vector Size|">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -531,13 +539,5 @@
    </PIN>
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
-   </NODE>
-   <NODE systemname="Renderer (TTY)" nodename="Renderer (TTY)" componentmode="InAWindow" id="69">
-   <BOUNDS type="Node" left="2415" top="8460" width="100" height="100">
-   </BOUNDS>
-   <BOUNDS type="Box" left="2415" top="8460" width="2400" height="1800">
-   </BOUNDS>
-   <BOUNDS type="Window" left="1185" top="10035" width="10860" height="5085">
-   </BOUNDS>
    </NODE>
    </PATCH>

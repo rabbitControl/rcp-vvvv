@@ -113,7 +113,7 @@ namespace VVVV.Nodes
 			FCachedParams.Clear();
 			FWatchedIOBoxes.Clear();
 		}
-		
+		 
 		private void GroupAdded(string address)
 		{
 			if (!FGroups.ContainsKey(address))
@@ -338,9 +338,6 @@ namespace VVVV.Nodes
 		{
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
-			FLogger.Log(LogType.Debug, "name: " + pinName);
-			FLogger.Log(LogType.Debug, "type: " + pin.Type);
-			
 			var id = IdFromPin(pin);
 			
 			IParameter parameter = null;
@@ -733,7 +730,7 @@ namespace VVVV.Nodes
 			var pin = sender as IPin2;
 			var userId = IdFromPin(pin);
 			
-			FLogger.Log(LogType.Debug, "id: " + userId);
+			//FLogger.Log(LogType.Debug, "id: " + userId);
 			var param = FCachedParams[userId];
 			//in case of enum pin we also update the full definition here
 			//which may have changed in the meantime
@@ -772,36 +769,73 @@ namespace VVVV.Nodes
 			{
 				case RcpTypes.Datatype.Boolean:
 				{
-					var f = (param as IBooleanParameter);
-					f.Default = subtype[2] == "1";
+					var p = (param as IBooleanParameter);
+					p.Default = subtype[2] == "1";
 					break;
 				}
 				case RcpTypes.Datatype.Float32:
 				{
-					var f = (param as INumberParameter<float>);
+					var p = (param as INumberParameter<float>);
 					float def, min, max, mul;
 					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
-					f.Default = def;
-					f.Minimum = min;
-					f.Maximum = max;
-					f.MultipleOf = mul;
-					f.Unit = subtype[6];
+					p.Default = def;
+					p.Minimum = min;
+					p.Maximum = max;
+					p.MultipleOf = mul;
+					p.Unit = subtype[6];
 					break;
 				}
 				case RcpTypes.Datatype.Int32:
 				{
-					var f = (param as INumberParameter<int>);
+					var p = (param as INumberParameter<int>);
 					int def, min, max, mul;
 					ParseIntSubtype(subtype, out def, out min, out max, out mul);
-					f.Default = def;
-					f.Minimum = min;
-					f.Maximum = max;
-					f.MultipleOf = mul;
-					f.Unit = subtype[6];
+					p.Default = def;
+					p.Minimum = min;
+					p.Maximum = max;
+					p.MultipleOf = mul;
+					p.Unit = subtype[6];
+					break;
+				}
+				case RcpTypes.Datatype.Vector2f32:
+				{
+					var p = (param as INumberParameter<V2>);
+					float def, min, max, mul;
+					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+					p.Default = new V2(def);
+					p.Minimum = new V2(min);
+					p.Maximum = new V2(max);
+					p.MultipleOf = new V2(mul);
+					p.Unit = subtype[6];
+					FLogger.Log(LogType.Debug, min.ToString());
+					break;
+				}
+				case RcpTypes.Datatype.Vector3f32:
+				{
+					var p = (param as INumberParameter<V3>);
+					float def, min, max, mul;
+					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+					p.Default = new V3(def);
+					p.Minimum = new V3(min);
+					p.Maximum = new V3(max);
+					p.MultipleOf = new V3(mul);
+					p.Unit = subtype[6];
+					break;
+				}
+				case RcpTypes.Datatype.Vector4f32:
+				{
+					var p = (param as INumberParameter<V4>);
+					float def, min, max, mul;
+					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
+					p.Default = new V4(def);
+					p.Minimum = new V4(min);
+					p.Maximum = new V4(max);
+					p.MultipleOf = new V4(mul);
+					p.Unit = subtype[6];
 					break;
 				}
 				
-				//TODO: subtypes for string, uri, enum, color, vectors
+				//TODO: subtypes for string, uri, vectors
 			}
 			FRCPServer.Update();
 		}
