@@ -23,10 +23,11 @@ using V4 = System.Numerics.Vector4;
 
 using RCP;
 using RCP.Transporter;
-using RCP.Parameter;
+using RCP.Parameters;
 using RCP.Protocol;
 
 using Kaitai;
+using RCP.Types;
 
 #endregion usings
 
@@ -65,11 +66,11 @@ namespace VVVV.Nodes
 		WebsocketServerTransporter FTransporter;
 		
 		//address -> IGroupParameter
-		Dictionary<string, IGroupParameter> FGroups = new Dictionary<string, IGroupParameter>();
+		Dictionary<string, GroupParameter> FGroups = new Dictionary<string, GroupParameter>();
 		//userid -> IPin2
 		Dictionary<string, IPin2> FCachedPins = new Dictionary<string, IPin2>();
 		//userid -> IParameter
-		Dictionary<string, IParameter> FCachedParams = new Dictionary<string, IParameter>();
+		Dictionary<string, Parameter> FCachedParams = new Dictionary<string, Parameter>();
 		readonly Dictionary<IPin2, IOBox> FWatchedIOBoxes = new Dictionary<IPin2, IOBox>();
 		#endregion fields & pins
 		  
@@ -150,7 +151,7 @@ namespace VVVV.Nodes
 		}
 		
 		//TODO: remove this when rcpserver has GetParamByUserId
-		private IEnumerable<IParameter> GetGroupParameters(string address)
+		private IEnumerable<Parameter> GetGroupParameters(string address)
 		{
 			var paramIds = FCachedParams.Values.Select(p => p.Id);
 			foreach (var id in paramIds)
@@ -334,13 +335,13 @@ namespace VVVV.Nodes
 			return pinName;
 		}
 		
-		private IParameter ParameterFromNode(INode2 node, string userId, string parentId)
+		private Parameter ParameterFromNode(INode2 node, string userId, string parentId)
 		{
 			var pinName = PinNameFromNode(node);
 			var pin = node.FindPin(pinName);
 			var id = IdFromPin(pin);
 			
-			IParameter parameter = null;
+			Parameter parameter = null;
 			
 			var subtype = new string[0];
 			if (!string.IsNullOrEmpty(pin.SubType))
@@ -492,7 +493,7 @@ namespace VVVV.Nodes
 			if (parameter == null)
 			{
 				parameter = FRCPServer.CreateStringParameter(label);
-				(parameter as IStringParameter).Value = "Unknown Type";
+				(parameter as StringParameter).Value = "Unknown Type";
 				//parameter.Readonly = true;
 			}
 
@@ -532,26 +533,26 @@ namespace VVVV.Nodes
 		private void ParameterUpdated(object sender, EventArgs e)
         {
         	IPin2 pin;
-        	if (FCachedPins.TryGetValue((sender as IParameter).UserId, out pin))
+        	if (FCachedPins.TryGetValue((sender as Parameter).UserId, out pin))
         	{
-				pin.Spread = RCP.Helpers.ValueToString(sender as IParameter);
+				pin.Spread = RCP.Helpers.ValueToString(sender as Parameter);
         		//FLogger.Log(LogType.Debug, "remote: " + pin.Spread);
         	}
         }
 		
 		#region GetParameter
-		private IParameter GetBoolParameter(string label, int sliceCount, bool def, IPin2 pin, Func<IPin2, int, bool> parse)
+		private Parameter GetBoolParameter(string label, int sliceCount, bool def, IPin2 pin, Func<IPin2, int, bool> parse)
 		{
 			if (sliceCount == 1)
 			{
-				var param = FRCPServer.CreateBooleanParameter(label);
+				var param = FRCPServer.CreateValueParameter<bool>(label);
 				param.Default = def;
 				param.Value = parse(pin, 0);
 				return param;
 			}
 			else
 			{
-				var param = FRCPServer.CreateBooleanArrayParameter(label, sliceCount);
+				var param = FRCPServer.CreateArrayParameter<bool>(label, sliceCount);
 				var values = new List<bool>();
 				var defs = new List<bool>();
 				for (int i=0; i<sliceCount; i++)
@@ -565,7 +566,7 @@ namespace VVVV.Nodes
 			}
 		}
 		
-		private IParameter GetNumberParameter<T>(string label, int sliceCount, int dimensions, T def, T min, T max, T multiple, IPin2 pin, Func<IPin2, int, T> parse) where T: struct
+		private Parameter GetNumberParameter<T>(string label, int sliceCount, int dimensions, T def, T min, T max, T multiple, IPin2 pin, Func<IPin2, int, T> parse) where T: struct
 		{
 			if (sliceCount == 1)
 			{
@@ -579,7 +580,7 @@ namespace VVVV.Nodes
 			}
 			else
 			{
-				var param = FRCPServer.CreateNumberArrayParameter<T[], T>(label, sliceCount);
+				var param = FRCPServer.CreateArrayParameter<T>(label, sliceCount);
 				var values = new List<T>();
 				var defs = new List<T>();
 				//TODO:set multiple, min, max
@@ -597,7 +598,7 @@ namespace VVVV.Nodes
 			}
 		}
 			
-		private IParameter GetStringParameter(string label, int sliceCount, string def, int maxChars, IPin2 pin, Func<IPin2, int, string> parse)
+		private Parameter GetStringParameter(string label, int sliceCount, string def, int maxChars, IPin2 pin, Func<IPin2, int, string> parse)
 		{
 			if (sliceCount == 1)
 			{
@@ -610,7 +611,7 @@ namespace VVVV.Nodes
 			}
 			else
 			{
-				var param = FRCPServer.CreateStringArrayParameter(label, sliceCount);
+				var param = FRCPServer.CreateArrayParameter<string>(label, sliceCount);
 				var values = new List<string>();
 				var defs = new List<string>();
 				for (int i=0; i<sliceCount; i++)
@@ -624,7 +625,7 @@ namespace VVVV.Nodes
 			}
 		}
 		
-		private IParameter GetUriParameter(string label, int sliceCount, string def, string schema, string filter, IPin2 pin, Func<IPin2, int, string> parse)
+		private Parameter GetUriParameter(string label, int sliceCount, string def, string schema, string filter, IPin2 pin, Func<IPin2, int, string> parse)
 		{
 			if (sliceCount == 1)
 			{
@@ -652,18 +653,18 @@ namespace VVVV.Nodes
 			}
 		}
 		
-		private IParameter GetRGBAParameter(string label, int sliceCount, Color def, IPin2 pin, Func<IPin2, int, Color> parse)
+		private Parameter GetRGBAParameter(string label, int sliceCount, Color def, IPin2 pin, Func<IPin2, int, Color> parse)
 		{
 			if (sliceCount == 1)
 			{
-				var param = FRCPServer.CreateRGBAParameter(label);
+				var param = FRCPServer.CreateValueParameter<Color>(label);
 				param.Default = def;
 				param.Value = parse(pin, 0);
 				return param;
 			}
 			else
 			{
-				var param = FRCPServer.CreateRGBAArrayParameter(label, sliceCount);
+				var param = FRCPServer.CreateArrayParameter<Color>(label, sliceCount);
 				var values = new List<Color>();
 				var defs = new List<Color>();
 				for (int i=0; i<sliceCount; i++)
@@ -677,7 +678,7 @@ namespace VVVV.Nodes
 			}
 		}
 		
-		private IParameter GetEnumParameter(string label, int sliceCount, string name, string def, IPin2 pin, Func<IPin2, int, string> parse)
+		private Parameter GetEnumParameter(string label, int sliceCount, string name, string def, IPin2 pin, Func<IPin2, int, string> parse)
 		{
 			var definition = GetEnumDefinition(name, def);
 			if (sliceCount == 1)
@@ -769,13 +770,13 @@ namespace VVVV.Nodes
 			{
 				case RcpTypes.Datatype.Boolean:
 				{
-					var p = (param as IBooleanParameter);
+					var p = (param as ValueParameter<bool>);
 					p.Default = subtype[2] == "1";
 					break;
 				}
 				case RcpTypes.Datatype.Float32:
 				{
-					var p = (param as INumberParameter<float>);
+					var p = (param as NumberParameter<float>);
 					float def, min, max, mul;
 					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
 					p.Default = def;
@@ -787,7 +788,7 @@ namespace VVVV.Nodes
 				}
 				case RcpTypes.Datatype.Int32:
 				{
-					var p = (param as INumberParameter<int>);
+					var p = (param as NumberParameter<int>);
 					int def, min, max, mul;
 					ParseIntSubtype(subtype, out def, out min, out max, out mul);
 					p.Default = def;
@@ -799,7 +800,7 @@ namespace VVVV.Nodes
 				}
 				case RcpTypes.Datatype.Vector2f32:
 				{
-					var p = (param as INumberParameter<V2>);
+					var p = (param as NumberParameter<V2>);
 					float def, min, max, mul;
 					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
 					p.Default = new V2(def);
@@ -812,7 +813,7 @@ namespace VVVV.Nodes
 				}
 				case RcpTypes.Datatype.Vector3f32:
 				{
-					var p = (param as INumberParameter<V3>);
+					var p = (param as NumberParameter<V3>);
 					float def, min, max, mul;
 					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
 					p.Default = new V3(def);
@@ -824,7 +825,7 @@ namespace VVVV.Nodes
 				}
 				case RcpTypes.Datatype.Vector4f32:
 				{
-					var p = (param as INumberParameter<V4>);
+					var p = (param as NumberParameter<V4>);
 					float def, min, max, mul;
 					ParseFloatSubtype(subtype, out def, out min, out max, out mul);
 					p.Default = new V4(def);
@@ -880,22 +881,22 @@ namespace RCP
 			return input;
 		}
 		
-		public static string ValueToString(IParameter param)
+		public static string ValueToString(Parameter param)
 		{
 			try
 			{
 				switch (param.TypeDefinition.Datatype)
 				{
-					case RcpTypes.Datatype.Boolean: return RCP.Helpers.BoolToString((param as IBooleanParameter).Value);
-					case RcpTypes.Datatype.String: return PipeEscape((param as IStringParameter).Value);
-					case RcpTypes.Datatype.Uri: return PipeEscape((param as IUriParameter).Value);
-					case RcpTypes.Datatype.Enum: return PipeEscape((param as IEnumParameter).Value);
-					case RcpTypes.Datatype.Float32: return RCP.Helpers.Float32ToString((param as INumberParameter<float>).Value);
-					case RcpTypes.Datatype.Int32: return RCP.Helpers.Int32ToString((param as INumberParameter<int>).Value);
-					case RcpTypes.Datatype.Vector2f32: return RCP.Helpers.Vector2f32ToString((param as INumberParameter<Vector2>).Value);
-					case RcpTypes.Datatype.Vector3f32: return RCP.Helpers.Vector3f32ToString((param as INumberParameter<Vector3>).Value);
-					case RcpTypes.Datatype.Vector4f32: return RCP.Helpers.Vector4f32ToString((param as INumberParameter<Vector4>).Value);
-					case RcpTypes.Datatype.Rgba: return RCP.Helpers.ColorToString((param as IRGBAParameter).Value);
+					case RcpTypes.Datatype.Boolean: return RCP.Helpers.BoolToString((param as ValueParameter<bool>).Value);
+					case RcpTypes.Datatype.String: return PipeEscape((param as StringParameter).Value);
+					case RcpTypes.Datatype.Uri: return PipeEscape((param as UriParameter).Value);
+					case RcpTypes.Datatype.Enum: return PipeEscape((param as EnumParameter).Value);
+					case RcpTypes.Datatype.Float32: return RCP.Helpers.Float32ToString((param as NumberParameter<float>).Value);
+					case RcpTypes.Datatype.Int32: return RCP.Helpers.Int32ToString((param as NumberParameter<int>).Value);
+					case RcpTypes.Datatype.Vector2f32: return RCP.Helpers.Vector2f32ToString((param as NumberParameter<Vector2>).Value);
+					case RcpTypes.Datatype.Vector3f32: return RCP.Helpers.Vector3f32ToString((param as NumberParameter<Vector3>).Value);
+					case RcpTypes.Datatype.Vector4f32: return RCP.Helpers.Vector4f32ToString((param as NumberParameter<Vector4>).Value);
+					case RcpTypes.Datatype.Rgba: return RCP.Helpers.ColorToString((param as ValueParameter<Color>).Value);
 					case RcpTypes.Datatype.Group: return "";
 					case RcpTypes.Datatype.Array:
 					{
@@ -903,53 +904,53 @@ namespace RCP
 						{
 							case RcpTypes.Datatype.Boolean:
 							{
-								var val = ((IBooleanArrayParameter)param).Value;
+								var val = ((ArrayParameter<bool>)param).Value;
 								return string.Join(",", val.Select(v => BoolToString(v)));
 							}
 							case RcpTypes.Datatype.Enum:
 							{
 								//TODO; accessing the subtypes entries fails
-								var val = ((IEnumArrayParameter)param).Value;
+								var val = ((ArrayParameter<string>)param).Value;
 								return string.Join(",", val.Select(v => PipeEscape(v)));
 							}						
 							case RcpTypes.Datatype.Int32:
 							{
-								var val = ((INumberArrayParameter<int[], int>)param).Value;
+								var val = ((ArrayParameter<int>)param).Value;
 								return string.Join(",", val.Select(v => Int32ToString(v)));
 							}
 							case RcpTypes.Datatype.Float32:
 							{
-								var val = ((INumberArrayParameter<float[], float>)param).Value;
+								var val = ((ArrayParameter<float>)param).Value;
 								return string.Join(",", val.Select(v => Float32ToString(v)));
 							}
 							case RcpTypes.Datatype.Vector2f32:
 							{
-								var val = ((INumberArrayParameter<V2[], V2>)param).Value;
+								var val = ((ArrayParameter<V2>)param).Value;
 								return string.Join(",", val.Select(v => Vector2f32ToString(v)));
 							}		
 							case RcpTypes.Datatype.Vector3f32:
 							{
-								var val = ((INumberArrayParameter<V3[], V3>)param).Value;
+								var val = ((ArrayParameter<V3>)param).Value;
 								return string.Join(",", val.Select(v => Vector3f32ToString(v)));
 							}	
 							case RcpTypes.Datatype.Vector4f32:
 							{
-								var val = ((INumberArrayParameter<V4[], V4>)param).Value;
+								var val = ((ArrayParameter<V4>)param).Value;
 								return string.Join(",", val.Select(v => Vector4f32ToString(v)));
 							}	
 							case RcpTypes.Datatype.String:
 							{
-								var val = ((IStringArrayParameter)param).Value;
+								var val = ((ArrayParameter<string>)param).Value;
 								return string.Join(",", val.Select(v => PipeEscape(v)));
 							}
 							case RcpTypes.Datatype.Uri:
 							{
-								var val = ((IUriArrayParameter)param).Value;
+								var val = ((ArrayParameter<string>)param).Value;
 								return string.Join(",", val.Select(v => PipeEscape(v)));
 							}
 							case RcpTypes.Datatype.Rgba:
 							{
-								var val = ((IRGBAArrayParameter)param).Value;
+								var val = ((ArrayParameter<Color>)param).Value;
 								return string.Join(",", val.Select(v => ColorToString(v)));
 							}
 							
@@ -976,7 +977,7 @@ namespace RCP
 		}
 		
 		//sets the value given as string on the given parameter
-		public static IParameter StringToValue(IParameter param, string input)
+		public static Parameter StringToValue(Parameter param, string input)
 		{
 			try
 			{
@@ -984,61 +985,61 @@ namespace RCP
 				{
 					case RcpTypes.Datatype.Boolean:
 					{
-						var p = (IBooleanParameter)param;
+						var p = (ValueParameter<bool>)param;
 						p.Value = ParseBool(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Enum:
 					{
-						var p = (IEnumParameter)param;
+						var p = (EnumParameter)param;
 						p.Value = PipeUnEscape(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Int32:
 					{
-						var p = (INumberParameter<int>)param;
+						var p = (NumberParameter<int>)param;
 						p.Value = ParseInt(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Float32:
 					{
-						var p = (INumberParameter<float>)param;
+						var p = (NumberParameter<float>)param;
 						p.Value = ParseFloat(input);
 						return p;
 					}
 					case RcpTypes.Datatype.String:
 					{
-						var p = (IStringParameter)param;
+						var p = (StringParameter)param;
 						p.Value = PipeUnEscape(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Uri:
 					{
-						var p = (IUriParameter)param;
+						var p = (UriParameter)param;
 						p.Value = PipeUnEscape(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Rgba:
 					{
-						var p = (IRGBAParameter)param;
+						var p = (ValueParameter<Color>)param;
 						p.Value = ParseColor(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Vector2f32:
 					{
-						var p = (INumberParameter<V2>)param;
+						var p = (NumberParameter<V2>)param;
 						p.Value = ParseVector2(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Vector3f32:
 					{
-						var p = (INumberParameter<V3>)param;
+						var p = (NumberParameter<V3>)param;
 						p.Value = ParseVector3(input);
 						return p;
 					}
 					case RcpTypes.Datatype.Vector4f32:
 					{
-						var p = (INumberParameter<V4>)param;
+						var p = (NumberParameter<V4>)param;
 						p.Value = ParseVector4(input);
 						return p;
 					}
@@ -1048,43 +1049,43 @@ namespace RCP
 						{
 							case RcpTypes.Datatype.Boolean:
 							{
-								var p = (IBooleanArrayParameter)param;
+								var p = (ArrayParameter<bool>)param;
 								p.Value = input.Split(',').Select(s => ParseBool(s)).ToArray();
 								return p;
 							}
 							case RcpTypes.Datatype.Enum:
 							{
-								var p = (IEnumArrayParameter)param;
+								var p = (ArrayParameter<string>)param;
 								p.Value = SplitToSlices(input).Select(s => PipeUnEscape(s)).ToArray();
 								return p;
 							}
 							case RcpTypes.Datatype.Int32:
 							{
-								var p = (INumberArrayParameter<int[], int>)param;
+								var p = (ArrayParameter<int>)param;
 								p.Value = input.Split(',').Select(s => ParseInt(s)).ToArray();
 								return p;
 							}
 							case RcpTypes.Datatype.String:
 							{
-								var p = (IStringArrayParameter)param;
+								var p = (ArrayParameter<string>)param;
 								p.Value = SplitToSlices(input).Select(s => PipeUnEscape(s)).ToArray();
 								return p;
 							}
 							case RcpTypes.Datatype.Uri:
 							{
-								var p = (IUriArrayParameter)param;
+								var p = (ArrayParameter<string>)param;
 								p.Value = SplitToSlices(input).Select(s => PipeUnEscape(s)).ToArray();
 								return p;
 							}
 							case RcpTypes.Datatype.Float32:
 							{
-								var p = (INumberArrayParameter<float[], float>)param;
+								var p = (ArrayParameter<float>)param;
 								p.Value = input.Split(',').Select(s => ParseFloat(s)).ToArray();
 								return p;
 							}
 							case RcpTypes.Datatype.Vector2f32:
 							{
-								var p = (INumberArrayParameter<V2[], V2>)param;
+								var p = (ArrayParameter<V2>)param;
 								var v = input.Split(',');
 								for (int i=0; i<v.Count()/2; i++)
 									p.Value[i] = new V2(ParseFloat(v[i*2]), ParseFloat(v[i*2+1]));
@@ -1092,7 +1093,7 @@ namespace RCP
 							}
 							case RcpTypes.Datatype.Vector3f32:
 							{
-								var p = (INumberArrayParameter<V3[], V3>)param;
+								var p = (ArrayParameter<V3>)param;
 								var v = input.Split(',');
 								for (int i=0; i<v.Count()/3; i++)
 									p.Value[i] = new V3(ParseFloat(v[i*3]), ParseFloat(v[i*3+1]), ParseFloat(v[i*3+2]));
@@ -1100,7 +1101,7 @@ namespace RCP
 							}
 							case RcpTypes.Datatype.Vector4f32:
 							{
-								var p = (INumberArrayParameter<V4[], V4>)param;
+								var p = (ArrayParameter<V4>)param;
 								var v = input.Split(',');
 								for (int i=0; i<v.Count()/4; i++)
 									p.Value[i] = new V4(ParseFloat(v[i*4]), ParseFloat(v[i*4+1]), ParseFloat(v[i*4+2]), ParseFloat(v[i*4+3]));
@@ -1108,7 +1109,7 @@ namespace RCP
 							}
 							case RcpTypes.Datatype.Rgba:
 							{
-								var p = (IRGBAArrayParameter)param;
+								var p = (ArrayParameter<Color>)param;
 								//split at commas outside of pipes
 								p.Value = SplitToSlices(input).Select(s => ParseColor(s)).ToArray();
 								return p;

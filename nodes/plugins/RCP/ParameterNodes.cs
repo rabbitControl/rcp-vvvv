@@ -11,7 +11,7 @@ using VVVV.Utils.VMath;
 using VVVV.Core.Logging;
 
 using RCP;
-using RCP.Parameter;
+using RCP.Parameters;
 using RCP.Protocol;
 using RCP.Transporter;
 
@@ -20,14 +20,14 @@ using Kaitai;
 
 namespace VVVV.Nodes
 {
-	public class Parameter
+	public class RcpParameter
 	{
 		string FId, FDatatype, FTypeDefinition, FValue, FLabel, FGroup, FWidget, FUserdata;
 		
-		public Parameter ()
+		public RcpParameter ()
 		{}
 		
-		public Parameter (short id, string datatype, string typeDefinition, string value, string label, string group, Widget widget, string userdata)
+		public RcpParameter (short id, string datatype, string typeDefinition, string value, string label, string group, Widget widget, string userdata)
 		{
 			FId = id.ToString();
 			FDatatype = datatype;
@@ -71,13 +71,13 @@ namespace VVVV.Nodes
 	{ 
 		#region fields & pins
 		[Input("Input")]
-		public ISpread<Parameter> FParameters;
+		public ISpread<RcpParameter> FParameters;
 		
 		[Input("Group")]
 		public ISpread<string> FGroup;
 		
 		[Output("Output")]
-		public ISpread<Parameter> FParametersOut;
+		public ISpread<RcpParameter> FParametersOut;
 		#endregion
 
 		//called when data for any output pin is requested
@@ -106,7 +106,7 @@ namespace VVVV.Nodes
 	{ 
 		#region fields & pins
 		[Input("Input")]
-		public ISpread<Parameter> FParameter;
+		public ISpread<RcpParameter> FParameter;
 		
 		[Output("ID")]
 		public ISpread<string> FId;
@@ -194,9 +194,9 @@ namespace VVVV.Nodes
 		public ISpread<string> FUserdata;
 		
 		[Output("Output")]
-		public ISpread<Parameter> FParameter;
+		public ISpread<RcpParameter> FParameter;
 		
-		List<Parameter> FParams = new List<Parameter>();
+		List<RcpParameter> FParams = new List<RcpParameter>();
 		
 		#endregion fields & pins
 		

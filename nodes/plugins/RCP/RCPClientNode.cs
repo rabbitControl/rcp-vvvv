@@ -18,7 +18,7 @@ using V3 = System.Numerics.Vector3;
 using V4 = System.Numerics.Vector4;
 
 using RCP;
-using RCP.Parameter;
+using RCP.Parameters;
 using RCP.Transporter;
 
 using Kaitai;
@@ -52,7 +52,7 @@ namespace VVVV.Nodes
 		public ISpread<bool> FIsConnected;
 		
 		[Output("Parameters")]
-		public ISpread<Parameter> FParameters;
+		public ISpread<RcpParameter> FParameters;
 		
 		[Import()]
 		public ILogger FLogger;
@@ -66,8 +66,8 @@ namespace VVVV.Nodes
 		{
 			FRCPClient = new RCPClient();
 			
-			FRCPClient.ParameterAdded = ParameterAdded;
-			FRCPClient.ParameterRemoved = ParameterRemoved;
+			FRCPClient.ParameterAdded += ParameterAdded;
+			FRCPClient.ParameterRemoved += ParameterRemoved;
 		}
 		
 		public void OnImportsSatisfied()
@@ -85,14 +85,14 @@ namespace VVVV.Nodes
 			FRCPClient.Dispose();
 		}
 		
-		private void ParameterAdded(IParameter parameter)
+		private void ParameterAdded(object sender, IParameter parameter)
 		{
 			parameter.Updated += ParameterUpdated;
 			FParamIds.Add(parameter.Id);
 			UpdateOutputs();			
 		}
 		
-		private void ParameterRemoved(IParameter parameter)
+		private void ParameterRemoved(object sender, IParameter parameter)
 		{
 			parameter.Updated -= ParameterUpdated;
 			FParamIds.Remove(parameter.Id);
@@ -134,7 +134,7 @@ namespace VVVV.Nodes
 		private void UpdateOutputs()
 		{
 			var parameters = FParamIds.Select(id => FRCPClient.GetParameter(id)).OrderBy(p => p.Order);
-			var ps = new List<Parameter>();
+			var ps = new List<RcpParameter>();
 			
 			foreach (var p in parameters)
 				ps.Add(GetParameter(p));
@@ -145,12 +145,12 @@ namespace VVVV.Nodes
 		//update one parameter
 		private void ParameterUpdated(object sender, EventArgs e)
 		{
-			var p = sender as IParameter;
+			var p = sender as Parameter;
 			var orderedParams = FParamIds.Select(pid => FRCPClient.GetParameter(pid)).OrderBy(param => param.Order).ToList();
 			FParameters[orderedParams.IndexOf(p)] = GetParameter(p);
 		}
 		
-		private Parameter GetParameter(IParameter p)
+		private RcpParameter GetParameter(Parameter p)
 		{
 			var v = RCP.Helpers.PipeUnEscape(RCP.Helpers.ValueToString(p));
 			var datatype = RCP.Helpers.DatatypeToString(p.TypeDefinition);
@@ -161,7 +161,7 @@ namespace VVVV.Nodes
 			if (p.ParentId != 0)
 				grp = FRCPClient.GetParameter(p.ParentId)?.Label ?? "invalid group ID: " + p.ParentId;
 			
-			return new Parameter(p.Id, datatype, typedef, v, p.Label, grp, p.Widget, userdata);
+			return new RcpParameter(p.Id, datatype, typedef, v, p.Label, grp, p.Widget, userdata);
 		}
 	}
 	
