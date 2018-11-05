@@ -88,6 +88,9 @@ namespace VVVV.Nodes
 		private void ParameterAdded(object sender, IParameter parameter)
 		{
 			parameter.Updated += ParameterUpdated;
+            var valueParameter = parameter as IValueParameter;
+            if (valueParameter != null)
+                valueParameter.ValueUpdated += ParameterUpdated;
 			FParamIds.Add(parameter.Id);
 			UpdateOutputs();			
 		}
@@ -95,7 +98,10 @@ namespace VVVV.Nodes
 		private void ParameterRemoved(object sender, IParameter parameter)
 		{
 			parameter.Updated -= ParameterUpdated;
-			FParamIds.Remove(parameter.Id);
+            var valueParameter = parameter as IValueParameter;
+            if (valueParameter != null)
+                valueParameter.ValueUpdated -= ParameterUpdated;
+            FParamIds.Remove(parameter.Id);
 			UpdateOutputs();
 		}
 
