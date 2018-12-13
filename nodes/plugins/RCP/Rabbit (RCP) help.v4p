@@ -31,7 +31,7 @@
    </BOUNDS>
    <BOUNDS type="Box" left="5265" top="1410" width="795" height="240">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" pintype="Input" values="0.9">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" pintype="Input" values="0">
    </PIN>
    <PIN pinname="Descriptive Name" slicecount="1" values="asdfa">
    </PIN>
@@ -71,7 +71,7 @@
    </PIN>
    <PIN pinname="Output String" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Input String" visible="1" pintype="Input" slicecount="1" values="|we asdf ds|">
+   <PIN pinname="Input String" visible="1" pintype="Input" slicecount="1" values="vvvv">
    </PIN>
    <PIN pinname="Default" slicecount="1" values="asdf">
    </PIN>
@@ -149,11 +149,13 @@
    </PIN>
    <PIN pinname="Y Output Value" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="47957536">
+   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="4">
    </PIN>
    <PIN pinname="X Input Value" slicecount="1" values="0">
    </PIN>
    <PIN pinname="Minimum" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Maximum" slicecount="1" values="10">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="17">
