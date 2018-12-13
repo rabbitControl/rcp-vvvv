@@ -43,7 +43,7 @@ namespace VVVV.Nodes
 	public class RCPRabbitNode : IPluginEvaluate, IPartImportsSatisfiedNotification, IDisposable
 	{
 		#region fields & pins
-		[Input("Host", IsSingle=true, DefaultString = "127.0.0.1")]
+		[Input("Host", IsSingle=true, DefaultString = "0.0.0.0")]
 		public IDiffSpread<string> FHost; 
 		
 		[Input("Port", IsSingle=true, DefaultValue = 10000)]
@@ -267,7 +267,7 @@ namespace VVVV.Nodes
 			
 			var parentId = ParentIdFromNode(node);
 			var param = ParameterFromNode(node, userId, parentId);
-			param.Updated += ParameterUpdated;
+			param.ValueUpdated += ParameterUpdated;
 			FCachedParams.Add(userId, param);
 			
 			//group
@@ -297,7 +297,7 @@ namespace VVVV.Nodes
 			var userId = IdFromPin(pin);
 			FCachedPins.Remove(userId);
 			var param = FCachedParams[userId];
-			param.Updated -= ParameterUpdated;
+			param.ValueUpdated -= ParameterUpdated;
 			FRCPServer.RemoveParameter(param);
 			FCachedParams.Remove(userId);
 
