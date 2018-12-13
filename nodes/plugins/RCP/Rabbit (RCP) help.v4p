@@ -1,4 +1,4 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50debug36.1.dtd" >
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv50beta38.dtd" >
    <PATCH nodename="C:\Users\joreg\Documents\repos\rcp-vvvv\nodes\plugins\RCP\Rabbit (RCP) help.v4p" scrollx="0" scrolly="0" bgcolor="15527148">
    <BOUNDS type="Window" left="0" top="0" width="11520" height="9645">
    </BOUNDS>
@@ -24,14 +24,14 @@
    <PIN pinname="Output String" slicecount="1" visible="0" values="||">
    </PIN>
    </NODE>
-   <PACK Name="addonpack" Version="36.0.0">
+   <PACK Name="addonpack" Version="38.0.0">
    </PACK>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="8" exposed="0">
    <BOUNDS type="Node" left="5265" top="1410" width="100" height="100">
    </BOUNDS>
    <BOUNDS type="Box" left="5265" top="1410" width="795" height="240">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" pintype="Input" values="1">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" pintype="Input" values="0.9">
    </PIN>
    <PIN pinname="Descriptive Name" slicecount="1" values="asdfa">
    </PIN>
@@ -71,7 +71,7 @@
    </PIN>
    <PIN pinname="Output String" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Input String" visible="1" pintype="Input" slicecount="1" values="|we asdf|">
+   <PIN pinname="Input String" visible="1" pintype="Input" slicecount="1" values="|we asdf ds|">
    </PIN>
    <PIN pinname="Default" slicecount="1" values="asdf">
    </PIN>
@@ -87,7 +87,7 @@
    </PIN>
    <PIN pinname="Color Output" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Color Input" visible="1" pintype="Input" slicecount="1" values="|0.30588,0.50588,0.10588,0.00000|">
+   <PIN pinname="Color Input" visible="1" pintype="Input" slicecount="1" values="|0.75789,0.96664,0.47187,0.00000|">
    </PIN>
    </NODE>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="14" exposed="0">
@@ -131,7 +131,7 @@
    </PIN>
    <PIN pinname="Y Output Value" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="1">
+   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="0">
    </PIN>
    <PIN pinname="X Input Value" slicecount="1" values="1">
    </PIN>
@@ -149,7 +149,7 @@
    </PIN>
    <PIN pinname="Y Output Value" visible="1" pintype="Output">
    </PIN>
-   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="5">
+   <PIN pinname="Y Input Value" visible="1" pintype="Input" slicecount="1" values="47957536">
    </PIN>
    <PIN pinname="X Input Value" slicecount="1" values="0">
    </PIN>
@@ -184,22 +184,6 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
-   <NODE nodename="IOBox (String)" componentmode="InABox" id="19">
-   <BOUNDS type="Box" left="615" top="3810" width="795" height="240">
-   </BOUNDS>
-   <BOUNDS type="Node" left="615" top="3810" width="0" height="0">
-   </BOUNDS>
-   <PIN pinname="Input String" slicecount="1" visible="1" values="127.0.0.1">
-   </PIN>
-   <PIN pinname="Default" slicecount="1" values="127.0.0.1">
-   </PIN>
-   <PIN pinname="File Mask" slicecount="1" values="||">
-   </PIN>
-   <PIN pinname="Maximum Characters" slicecount="1" values="-1">
-   </PIN>
-   <PIN pinname="Output String" visible="1">
-   </PIN>
-   </NODE>
    <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="20">
    <BOUNDS type="Box" left="855" top="4305" width="555" height="240">
    </BOUNDS>
@@ -214,20 +198,6 @@
    <PIN pinname="Value Type" slicecount="1" values="Integer">
    </PIN>
    <PIN pinname="Y Output Value" visible="1">
-   </PIN>
-   </NODE>
-   <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="21">
-   <BOUNDS type="Node" left="1455" top="3810" width="630" height="270">
-   </BOUNDS>
-   <BOUNDS type="Box" left="1455" top="3810" width="630" height="270">
-   </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt; Host|">
-   </PIN>
-   <PIN pinname="Output String" visible="0">
-   </PIN>
-   <PIN pinname="Show Grid" slicecount="1" values="0">
-   </PIN>
-   <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
    <NODE nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox" id="22">
@@ -411,7 +381,7 @@
    </PIN>
    <PIN pinname="Remote Port" visible="1">
    </PIN>
-   <PIN pinname="Host" visible="1" slicecount="1" values="127.0.0.1">
+   <PIN pinname="Host" visible="1" slicecount="1" values="0.0.0.0">
    </PIN>
    <PIN pinname="Port" visible="1" slicecount="1" values="10000">
    </PIN>
@@ -420,11 +390,7 @@
    <PIN pinname="Client Count" visible="1">
    </PIN>
    </NODE>
-   <LINK srcnodeid="19" srcpinname="Output String" dstnodeid="4" dstpinname="Remote Host">
-   </LINK>
    <LINK srcnodeid="20" srcpinname="Y Output Value" dstnodeid="4" dstpinname="Remote Port">
-   </LINK>
-   <LINK srcnodeid="19" srcpinname="Output String" dstnodeid="4" dstpinname="Host">
    </LINK>
    <LINK srcnodeid="20" srcpinname="Y Output Value" dstnodeid="4" dstpinname="Port">
    </LINK>
